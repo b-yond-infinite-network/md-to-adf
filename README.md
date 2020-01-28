@@ -1,11 +1,12 @@
 # Markdown to Atlassian Document Format (ADF) translation
 
-Transform Wiki/Markdown text into Confluence/JIRA Atlassian Document Format (ADF) : 
-the format use by JIRA and Confluence to describe complex formatted text. 
+Transform Github Markdown text into Atlassian Document Format (ADF)*
 
 [![Build Status](https://github.com/b-yond-infinite-network/md-to-adf/workflows/test/badge.svg)](https://github.com/b-yond-infinite-network/md-to-adf/workflows/test/)
 [![Codecov](https://codecov.io/gh/b-yond-infinite-network/md-to-adf/branch/master/graph/badge.svg)](https://codecov.io/gh/b-yond-infinite-network/md-to-adf)
 [![npm downloads](https://img.shields.io/npm/dm/md-to-adf?style=flat-square)](https://www.npmjs.com/package/md-to-adf)
+
+\* ADF is JIRA and Confluence to describe complex formatted text. 
 
 
 ## Overview
