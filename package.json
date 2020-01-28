@@ -1,0 +1,55 @@
+{
+  "name": "md-to-adf",
+  "version": "0.4.0",
+  "description": "Translate Markdown (Github) into Atlassian Document Format (ADF)",
+  "main": "dist/index.js",
+  "scripts": {
+    "package": "ncc build index.js -o dist",
+    "test": "jest --silent",
+    "coverage": "codecov"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/b-yond-infinite-network/md-to-adf.git"
+  },
+  "keywords": [
+    "markdown",
+    "wiki",
+    "atlassian",
+    "jira",
+    "confluence",
+    "adf"
+  ],
+  "dependencies": {
+    "adf-builder": "^3.3.0"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "^0.20.5",
+    "codecov": "^4.0.0-0",
+    "husky": "^3.0.9",
+    "jest-cucumber-fusion": "^0.6.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm test && npm run package && git add dist/index.js",
+      "pre-push": "npm test"
+    }
+  },
+  "author": "B-Yond",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/b-yond-infinite-network/md-to-adf/issues"
+  },
+  "homepage": "https://github.com/b-yond-infinite-network/md-to-adf#readme",
+  "jest": {
+    "testMatch": [
+      "**/*.steps.js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/test/"
+    ],
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true
+  }
+}

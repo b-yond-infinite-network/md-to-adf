@@ -75,7 +75,7 @@ typings/
 .nuxt
 dist
 
-
+.github
 
 .idea
 .DS_Store
