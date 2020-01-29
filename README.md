@@ -4,9 +4,8 @@ Transform Github Markdown text into Atlassian Document Format (ADF)*
 
 [![integration](https://github.com/b-yond-infinite-network/md-to-adf/workflows/integration/badge.svg?branch=master)](https://github.com/b-yond-infinite-network/md-to-adf/actions?query=workflow%3Aintegration)
 [![Codecov](https://codecov.io/gh/b-yond-infinite-network/md-to-adf/branch/master/graph/badge.svg)](https://codecov.io/gh/b-yond-infinite-network/md-to-adf)
-
-![Publish To NPM](https://github.com/b-yond-infinite-network/md-to-adf/workflows/publish/badge.svg?branch=master)
-[[![npm downloads](https://img.shields.io/npm/dm/md-to-adf?style=flat-square)](https://www.npmjs.com/package/md-to-adf)](https://github.com/b-yond-infinite-network/md-to-adf/actions?query=workflow%3Apublish)
+[![Publish To NPM](https://github.com/b-yond-infinite-network/md-to-adf/workflows/Publish/badge.svg?branch=master)](https://github.com/b-yond-infinite-network/md-to-adf/actions?query=workflow%3APublish)
+[![npm downloads](https://img.shields.io/npm/dm/md-to-adf?style=flat-square)](https://www.npmjs.com/package/md-to-adf)
 
 
 
