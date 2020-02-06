@@ -34,13 +34,18 @@ Given( /^the markdown in GITHUB the same than in the markdown file named '(.*)'$
 
 Given( 'the markdown in GITHUB is :', lineTable => {
 	const anchor = Object.getOwnPropertyNames( lineTable[ 0 ] ) [ 0 ]
-	const markdownTable = [ anchor.charAt( 0 ) === "'" ? anchor.substring( 1 ) : anchor,
+	const anchorMatch = anchor.match( /^'(?<whiteSpaces>\s*)'$|^'(?<text>.*)$/ )
+	const markdownTable = [ ( anchorMatch
+							  && ( anchorMatch.groups.whiteSpaces || anchorMatch.groups.text )
+							  ? anchorMatch.groups.whiteSpaces ? anchorMatch.groups.whiteSpaces : anchorMatch.groups.text
+							  : anchor ),
 							...lineTable.map( currentLine => currentLine[ anchor ] ) ]
 	jiraContent = markdownTable.reduce( ( currentContent, currentLineInTable ) => {
+		const lineMatch = currentLineInTable.match( /^'(?<whiteSpaces>\s*)'$|^'(?<text>.*)$/ )
 		return currentContent
 			   + '\n'
-			   + ( currentLineInTable.charAt( 0 ) === "'"
-				   ? currentLineInTable.substring( 1 )
+			   + ( lineMatch && ( lineMatch.groups.whiteSpaces || lineMatch.groups.text )
+				   ? lineMatch.groups.whiteSpaces ? lineMatch.groups.whiteSpaces : lineMatch.groups.text
 				   : currentLineInTable )
 		
 	} )
@@ -85,6 +90,23 @@ Then( And( /^the ADF chunk at content path (\[(?: *\d+(?: |, |,)*)+\]) has type 
 			   const finalContentAtDepth = extractContentFromContentPath( translatedADF, JSON.parse( depthArray ) )
 	
 			   expect( finalContentAtDepth.content.type ).toEqual( contentType )
+		   } ) )
+
+Then( And( /^the ADF chunk at content path (\[(?: *\d+(?: |, |,)*)+\]) has a content at (\d*) of type '(.*)'$/,
+		   ( depthArray, indexInContent, contentType ) => {
+			   const finalContentAtDepth = extractContentFromContentPath( translatedADF, JSON.parse( depthArray ) )
+			
+			   const flattenTranslatedADFChunk = JSON.parse( JSON.stringify( finalContentAtDepth.content.content[ indexInContent ] ) )
+			   expect( flattenTranslatedADFChunk.type ).toEqual( contentType )
+		   } ) )
+
+Then( And( /^the ADF chunk at content path (\[(?: *\d+(?: |, |,)*)+\]) has a content at (\d*) with attribute '(.*)'$/,
+		   ( depthArray, indexInContent, attributeAndValueToFind ) => {
+			   const finalContentAtDepth = extractContentFromContentPath( translatedADF, JSON.parse( depthArray ) )
+	
+			   const parsedAttributes = JSON.parse( attributeAndValueToFind )
+			   const flattenTranslatedADFChunk = JSON.parse( JSON.stringify( finalContentAtDepth ) )
+			   expect( flattenTranslatedADFChunk.attrs ).toEqual( expect.objectContaining( parsedAttributes ) )
 		   } ) )
 
 Then( And( /^the ADF chunk at content path (\[(?: *\d+(?: |, |,)*)+\]) has attribute '(.*)'$/,

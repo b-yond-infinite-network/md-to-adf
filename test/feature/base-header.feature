@@ -81,4 +81,5 @@ Feature: Conversion of Header markdown
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "tag" }'
     And the ADF chunk at content path [ 1 ] has type 'paragraph'
     And the ADF chunk at content path [ 1 ] contains '{"type": "text", "text": "And a paragraph"}'
-    And the ADF chunk at content path [ 1 ] contains '{"type": "text", "text": "And more text inside the same paragraph"}'
+    And the ADF chunk at content path [ 2 ] has type 'paragraph'
+    And the ADF chunk at content path [ 2 ] contains '{"type": "text", "text": "And more text inside the same paragraph"}'
