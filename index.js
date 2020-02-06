@@ -18,7 +18,28 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 		//{ adfType, typeParam, textToEmphasis, textPosition }
 	} )
 	
-	const { accumulatedNodes } = arrOfNodes.reduce( ( { accumulatedNodes, indexCurrentCodeBlock }, currentLineNode ) => {
+	const { accumulatedNodes } = arrOfNodes.reduce( ( { accumulatedNodes, indexCurrentCodeBlock, indexCurrentList, lastWasEmptyLine }, currentLineNode ) => {
+		
+		if( !lastWasEmptyLine
+			&& currentLineNode.adfType === 'paragraph'
+			&& currentLineNode.textToEmphasis.match( /^(?:[\s])*$/ ) ){
+			return { accumulatedNodes, indexCurrentCodeBlock, indexCurrentList, lastWasEmptyLine: true }
+		}
+		
+		if( lastWasEmptyLine
+			&& currentLineNode.adfType === 'paragraph'
+			&& currentLineNode.textToEmphasis.match( /^(?:[\s])*$/ ) ) {
+			return { accumulatedNodes, indexCurrentCodeBlock }
+		}
+		
+		if( currentLineNode.adfType !== 'heading'
+			&& currentLineNode.adfType !== 'orderedList'
+			&& currentLineNode.adfType !== 'bulletList'
+			&& indexCurrentList
+			&& currentLineNode.textPosition < accumulatedNodes[ indexCurrentList ].textPosition + 2 ){
+			currentLineNode.textPosition = accumulatedNodes[ indexCurrentList ].textPosition + 2
+		}
+		
 		if( ( currentLineNode.adfType === 'codeBlock'
 			  || ( currentLineNode.nodeAttached && currentLineNode.nodeAttached.adfType === 'codeBlock' ) )
 			&& typeof indexCurrentCodeBlock === 'undefined' ){
@@ -32,13 +53,13 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 				accumulatedNodes.push( currentLineNode.nodeAttached )
 			}
 			
-			return { accumulatedNodes, indexCurrentCodeBlock: accumulatedNodes.length - 1 }
+			return { accumulatedNodes, indexCurrentCodeBlock: accumulatedNodes.length - 1, indexCurrentList }
 		}
 		
 		if( currentLineNode.adfType === 'codeBlock'
 			&& typeof indexCurrentCodeBlock !== 'undefined' ){
 			accumulatedNodes[ indexCurrentCodeBlock ].textPosition = currentLineNode.textPosition
-			return { accumulatedNodes }
+			return { accumulatedNodes, indexCurrentList }
 		}
 		
 		if( currentLineNode.adfType === 'paragraph'
@@ -51,11 +72,16 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 			accumulatedNodes[ indexCurrentCodeBlock ].textToEmphasis += currentLineNode.textToEmphasis
 			accumulatedNodes[ indexCurrentCodeBlock ].textPosition = currentLineNode.textPosition
 			
-			return { accumulatedNodes, indexCurrentCodeBlock }
+			return { accumulatedNodes, indexCurrentCodeBlock, indexCurrentList }
 		}
 		
 		accumulatedNodes.push( currentLineNode )
-		return { accumulatedNodes }
+		if( currentLineNode.adfType === 'bulletList' || currentLineNode.adfType === 'orderedList' ){
+			return { accumulatedNodes, indexCurrentList: accumulatedNodes.length - 1 }
+		}
+		
+		return { accumulatedNodes, indexCurrentList }
+		
 	}, { accumulatedNodes: [ ] } )
 	
 	const levelsPosition = accumulatedNodes.reduce( ( currentLevelList, currentList ) => {
@@ -63,12 +89,13 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 			   ? currentLevelList
 			   : currentLevelList.length === 0 || currentList.textPosition > ( currentLevelList[ currentLevelList.length - 1 ] + 1 )
 				 ? [ ...currentLevelList, currentList.textPosition ]
-				 : currentList.textPosition
-				   ? currentLevelList.splice( 	currentLevelList.findIndex( findIndexListValues => {
-						return currentList.textPosition < findIndexListValues.textPosition
-					} ), 0, currentList.textPosition )
-				   : currentLevelList
-	}, [ ] )
+				 : currentLevelList
+		// currentList.textPosition
+		// 		   ? currentLevelList.splice( 	currentLevelList.findIndex( findIndexListValues => {
+		// 				return currentList.textPosition < findIndexListValues.textPosition
+		// 			} ), 0, currentList.textPosition )
+		// 		   : currentLevelList
+	}, [ 0 ] )
 	
 	const levelsListsIndexes = levelsPosition.map( currentLevelPosition => {
 		return accumulatedNodes.filter( currentList => ( currentList.textPosition === currentLevelPosition
@@ -128,7 +155,9 @@ function translateMarkdownLineToADF( markdownLineTextWithTabs ){
 	if( paragraphNode ) return paragraphNode
 	
 	//this is a line break then
-	return {  }
+	return { 	adfType : 		"paragraph",
+				textToEmphasis: "",
+				textPosition: 	markdownLine.length }
 }
 
 function matchHeader( lineToMatch ){
@@ -202,7 +231,9 @@ function matchParagraph( lineToMatch ){
 		&& paragraph.groups.paragraphText ){
 		return { 	adfType : 		"paragraph",
 			textToEmphasis: paragraph.groups.paragraphText,
-			textPosition: 	lineToMatch.indexOf( paragraph.groups.paragraphText ) }
+			textPosition: 	!paragraph.groups.paragraphText.match( /^(?:[\s])*$/ )
+							 ? lineToMatch.indexOf( paragraph.groups.paragraphText )
+							 : lineToMatch.length }
 	}
 	
 	return null
@@ -211,7 +242,9 @@ function matchParagraph( lineToMatch ){
 function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameIndent ){
 	currentArrayOfNodesOfSameIndent.reduce( ( lastListNode, currentNode ) => {
 		
-		const nodeOrListNode = lastListNode && lastListNode.content.type === currentNode.node.adfType
+		const nodeOrListNode = lastListNode !== null
+							   && ( currentNode.node.adfType === 'orderedList' || currentNode.node.adfType === 'bulletList' )
+							   && lastListNode.content.type === currentNode.node.adfType
 							   ? lastListNode
 							   : addTypeToNode( currentParentNode, currentNode.node.adfType, currentNode.node.typeParam )
 		
@@ -224,8 +257,12 @@ function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameI
 									 : nodeOrListItem
 								   : nodeOrListItem
 		
-		if( currentNode.node.textToEmphasis )
+		if( currentNode.node.adfType !== 'codeBlock'
+			&& currentNode.node.textToEmphasis )
 			attachTextToNodeWithEmphasis( nodeToAttachTextTo, currentNode.node.textToEmphasis )
+		
+		else if( currentNode.node.adfType === 'codeBlock' )
+			attachTextToNodeRaw( nodeToAttachTextTo, currentNode.node.textToEmphasis )
 		
 		if( currentNode.children )
 			fillADFNodesWithMarkdown( nodeOrListItem, currentNode.children )
@@ -383,6 +420,11 @@ function textWithInline( nodeToAttachTo, rawText, marksToUse ){
 		nodeToAttachTo.content.add( textNode )
 	}
 	
+}
+
+function attachTextToNodeRaw( nodeToAttachTo, textToAttach ){
+	const textNode = new Text( textToAttach )
+	nodeToAttachTo.content.add( textNode )
 }
 
 module.exports = translateGITHUBMarkdownToADF

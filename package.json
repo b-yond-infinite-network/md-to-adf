@@ -1,6 +1,6 @@
 {
   "name": "md-to-adf",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Translate Markdown (Github) into Atlassian Document Format (ADF)",
   "main": "dist/index.js",
   "scripts": {
@@ -27,7 +27,7 @@
     "@zeit/ncc": "^0.20.5",
     "codecov": "^4.0.0-0",
     "husky": "^3.0.9",
-    "jest-cucumber-fusion": "^0.6.0"
+    "jest-cucumber-fusion": "^0.6.1"
   },
   "husky": {
     "hooks": {
