@@ -2,11 +2,13 @@
 
 Transform Github Markdown text into Atlassian Document Format (ADF)*
 
-[![integration](https://github.com/b-yond-infinite-network/md-to-adf/workflows/integration/badge.svg?branch=master)](https://github.com/b-yond-infinite-network/md-to-adf/actions?query=workflow%3Aintegration)
+[![CI](https://github.com/b-yond-infinite-network/md-to-adf/workflows/Integration/badge.svg?branch=master)](https://github.com/b-yond-infinite-network/md-to-adf/actions?query=workflow%3AIntegration)
 [![Codecov](https://codecov.io/gh/b-yond-infinite-network/md-to-adf/branch/master/graph/badge.svg)](https://codecov.io/gh/b-yond-infinite-network/md-to-adf)
-[![Publish To NPM](https://github.com/b-yond-infinite-network/md-to-adf/workflows/Publish/badge.svg?branch=master)](https://github.com/b-yond-infinite-network/md-to-adf/actions?query=workflow%3APublish)
-[![npm downloads](https://img.shields.io/npm/dm/md-to-adf?style=flat-square)](https://www.npmjs.com/package/md-to-adf)
+[![Published](https://github.com/b-yond-infinite-network/md-to-adf/workflows/Publish/badge.svg?branch=master)](https://github.com/b-yond-infinite-network/md-to-adf/actions?query=workflow%3APublish)
 
+
+[![npm downloads](https://img.shields.io/npm/dm/md-to-adf?style=flat-square)](https://www.npmjs.com/package/md-to-adf)
+[![npm latest](https://img.shields.io/npm/v/md-to-adf/latest.svg)](https://www.npmjs.com/package/md-to-adf)
 
 \* ADF is JIRA and Confluence to describe complex formatted text. 
 
