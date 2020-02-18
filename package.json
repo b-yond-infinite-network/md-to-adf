@@ -52,21 +52,13 @@
   "release": {
     "plugins": [
       "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      [ "@semantic-release/github", {
-        "assets": ["dist/**"]
-      } ],
-      [
-        "@semantic-release/npm",
-        {
-          "npmPublish": true
-        }
-      ]
+      [ "@semantic-release/release-notes-generator", { "preset": "jscs" } ],
+      [ "@semantic-release/github",                 { "assets": ["dist/**"] } ],
+      [ "@semantic-release/npm",                    { "npmPublish": true } ]
     ],
     "parserOpts": {
       "mergePattern": "Merged PR .*:"
-    },
-    "preset": "jscs"
+    }
   },
   "author": "B-Yond",
   "license": "Apache-2.0",
