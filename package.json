@@ -33,6 +33,7 @@
     "jest-cucumber-fusion": "^0.6.1",
     "commitizen": "^4.0.3",
     "cz-conventional-changelog": "^3.1.0",
+    "conventional-changelog-jscs": "^0.1.0",
     "semantic-release": "^17.0.2"
   },
   "husky": {
@@ -52,9 +53,26 @@
   "release": {
     "plugins": [
       "@semantic-release/commit-analyzer",
-      [ "@semantic-release/release-notes-generator", { "preset": "jscs" } ],
-      [ "@semantic-release/github",                 { "assets": ["dist/**"] } ],
-      [ "@semantic-release/npm",                    { "npmPublish": true } ]
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "jscs"
+        }
+      ],
+      [
+        "@semantic-release/github",
+        {
+          "assets": [
+            "dist/**"
+          ]
+        }
+      ],
+      [
+        "@semantic-release/npm",
+        {
+          "npmPublish": true
+        }
+      ]
     ],
     "parserOpts": {
       "mergePattern": "Merged PR .*:"
