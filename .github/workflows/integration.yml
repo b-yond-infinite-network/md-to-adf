@@ -10,10 +10,22 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - name: Checking code
+      uses: actions/checkout@v1
 
-    - run: npm ci
-    - run: npm test
-    - uses: codecov/codecov-action@v1.0.3
+    - name: Integrating
+      run: npm ci
+
+    - name: Testing
+      run: npm test
+
+    - name: Code Coverage
+      uses: codecov/codecov-action@v1.0.3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Releasing
+      uses: cycjimmy/npm semantic-release-action@v2
+      env:
+        GITHUB_TOKEN:     ${{ secrets.GITHUB_TOKEN }}
+        NPM_TOKEN:        ${{ secrets.NPM_TOKEN }}

@@ -1,12 +1,14 @@
 {
   "name": "md-to-adf",
-  "version": "0.5.1",
+  "version": "0.0.0-semantically-released",
   "description": "Translate Markdown (Github) into Atlassian Document Format (ADF)",
   "main": "dist/index.js",
   "scripts": {
     "package": "ncc build index.js -o dist",
     "test": "jest --silent",
-    "coverage": "codecov"
+    "coverage": "codecov",
+    "commit": "git-cz",
+    "semantic-release": "semantic-release"
   },
   "repository": {
     "type": "git",
@@ -28,12 +30,42 @@
     "@zeit/ncc": "^0.20.5",
     "codecov": "^4.0.0-0",
     "husky": "^3.0.9",
-    "jest-cucumber-fusion": "^0.6.1"
+    "jest-cucumber-fusion": "^0.6.1",
+    "commitizen": "^4.0.3",
+    "cz-conventional-changelog": "^3.1.0",
+    "semantic-release": "^17.0.2"
   },
   "husky": {
     "hooks": {
       "pre-commit": "npm test && npm run package && git add dist/index.js",
       "pre-push": "npm test"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "release": {
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [ "@semantic-release/github", {
+        "assets": ["dist/**"]
+      } ],
+      [
+        "@semantic-release/npm",
+        {
+          "npmPublish": true,
+          "pkgRoot": "build"
+        }
+      ]
+    ],
+    "parserOpts": {
+      "mergePattern": "Merged PR .*:"
     }
   },
   "author": "B-Yond",
