@@ -65,7 +65,8 @@
     ],
     "parserOpts": {
       "mergePattern": "Merged PR .*:"
-    }
+    },
+    "preset": "jscs"
   },
   "author": "B-Yond",
   "license": "Apache-2.0",
