@@ -25,7 +25,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: Releasing
-      uses: cycjimmy/npm semantic-release-action@v2
+      uses: cycjimmy/semantic-release-action@v2
       env:
         GITHUB_TOKEN:     ${{ secrets.GITHUB_TOKEN }}
         NPM_TOKEN:        ${{ secrets.NPM_TOKEN }}
