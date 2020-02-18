@@ -8,7 +8,6 @@ Transform Github Markdown text into Atlassian Document Format (ADF)*
 [![npm downloads](https://img.shields.io/npm/dm/md-to-adf?style=flat-square)](https://www.npmjs.com/package/md-to-adf)
 
 
-
 \* ADF is JIRA and Confluence to describe complex formatted text. 
 
 
