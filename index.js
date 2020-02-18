@@ -13,24 +13,100 @@ function translateGITHUBMarkdownToADF( markdownText ){
 
 
 function buildTreeFromMarkdown( rawTextMarkdown ){
-	const arrOfNodes = rawTextMarkdown.split( '\n' ).flatMap( currentLine => {
-		return translateMarkdownLineToADF( currentLine )
-		//{ adfType, typeParam, textToEmphasis, textPosition }
+	
+	///MARDKOWN logic - closing code blocks
+	//  When a code block is open, it should be closed by a triple caret, everything in between is code
+	const { codeBlockHandled } = rawTextMarkdown.split( '\n' ).reduce( ( { codeBlockHandled, indexCurrentCodeBloc }, currentLine, indexCurrentLine ) => {
+		const lineTranslation = translateMarkdownLineToADF( currentLine )
+		
+		if( typeof indexCurrentCodeBloc === "undefined"
+			&& ( lineTranslation.adfType === 'codeBlock'
+				 || lineTranslation.nodeAttached ) ){
+			codeBlockHandled.push( lineTranslation )
+			if( lineTranslation.nodeAttached ){
+				codeBlockHandled.push( lineTranslation.nodeAttached )
+			}
+			
+			return { codeBlockHandled, indexCurrentCodeBloc: codeBlockHandled.length - 1 }
+		}
+		
+		if( typeof indexCurrentCodeBloc !== "undefined"
+			&& ( lineTranslation.adfType !== 'codeBlock'
+				 || typeof lineTranslation.typeParam === "undefined"
+				 || lineTranslation.typeParam !== '' ) ) {
+			const textToAdd = lineTranslation.textPosition >= codeBlockHandled[ indexCurrentCodeBloc ].textPosition
+							  ? currentLine.slice( codeBlockHandled[ indexCurrentCodeBloc ].textPosition )
+							  : currentLine
+			codeBlockHandled[ indexCurrentCodeBloc ].textToEmphasis = codeBlockHandled[ indexCurrentCodeBloc ].textToEmphasis
+																	  + ( codeBlockHandled[ indexCurrentCodeBloc ].textToEmphasis === ''
+																		  ? textToAdd
+																		  : '\n' + textToAdd )
+			return { codeBlockHandled, indexCurrentCodeBloc }
+		}
+		
+		if( typeof indexCurrentCodeBloc !== "undefined"
+			&& lineTranslation.adfType === 'codeBlock'
+			&& typeof lineTranslation.typeParam !== "undefined"
+			&& lineTranslation.typeParam === '' ){
+			return { codeBlockHandled }
+		}
+		
+		codeBlockHandled.push( lineTranslation )
+		
+		return { codeBlockHandled }
+	}, { codeBlockHandled: [] } )
+	
+	//MARKDOWN -- handling of unfinished empty codeBlock
+	const cleanedCodeBlock = codeBlockHandled.filter( ( currentNode ) => {
+		if( currentNode.adfType !== 'codeBlock' )
+			return currentNode
+		
+		if( currentNode.textToEmphasis !== '' )
+			return currentNode
 	} )
 	
-	const { accumulatedNodes } = arrOfNodes.reduce( ( { accumulatedNodes, indexCurrentCodeBlock, indexCurrentList, lastWasEmptyLine }, currentLineNode ) => {
+	///MARKDOWN logic
+	// empty line handling => heading is an exception, otherwise non-empty line aggregate in the parent element
+	// For all other type, following a markdown with any paragraph of text is considered a continuation, so we aggregate
+	//  all subsequent text into the same parent element (paragraph, list item, ...)
+	const { breakedLineNodes } = cleanedCodeBlock.reduce( ( { breakedLineNodes, currentParent }, currentLineNode ) => {
 		
-		if( !lastWasEmptyLine
-			&& currentLineNode.adfType === 'paragraph'
-			&& currentLineNode.textToEmphasis.match( /^(?:[\s])*$/ ) ){
-			return { accumulatedNodes, indexCurrentCodeBlock, indexCurrentList, lastWasEmptyLine: true }
+		if( currentLineNode.adfType === 'heading'
+			|| currentLineNode.adfType === 'codeBlock' ){
+			breakedLineNodes.push( currentLineNode )
+			return { breakedLineNodes }
 		}
 		
-		if( lastWasEmptyLine
-			&& currentLineNode.adfType === 'paragraph'
-			&& currentLineNode.textToEmphasis.match( /^(?:[\s])*$/ ) ) {
-			return { accumulatedNodes, indexCurrentCodeBlock }
+		if( currentLineNode.adfType !== 'paragraph' ){
+			breakedLineNodes.push( currentLineNode )
+			return { breakedLineNodes, currentParent: currentLineNode }
 		}
+		
+		if( /^(?:[\s]*)$/.test( currentLineNode.textToEmphasis ) ) {
+			//we're breaking into a new paragraph
+			return { breakedLineNodes }
+		}
+		
+		//this is a non-empty paragraph, if we are already filling up a paragraph, let's add the text inside
+		if( currentParent ){
+			const textToAdd = currentLineNode.textPosition >= currentParent.textPosition
+							  ? currentLineNode.textToEmphasis.slice( currentParent.textPosition )
+							  : currentLineNode.textToEmphasis
+			currentParent.textToEmphasis = currentParent.textToEmphasis + ( currentLineNode.textToEmphasis.charAt( 0 ) !== ' '
+																			? ' ' + textToAdd
+																			: textToAdd )
+			return { breakedLineNodes, currentParent }
+		}
+		
+		//this is a lone new paragraph, we add it to the list
+		breakedLineNodes.push( currentLineNode )
+		return { breakedLineNodes, currentParent: currentLineNode }
+		
+	}, { breakedLineNodes: [ ] } )
+	
+	///MARKDOWN logic
+	// Realign children nodes to orderedList and bulletList
+	const { accumulatedNodes } = breakedLineNodes.reduce( ( { accumulatedNodes, indexCurrentList }, currentLineNode ) => {
 		
 		if( currentLineNode.adfType !== 'heading'
 			&& currentLineNode.adfType !== 'orderedList'
@@ -40,42 +116,11 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 			currentLineNode.textPosition = accumulatedNodes[ indexCurrentList ].textPosition + 2
 		}
 		
-		if( ( currentLineNode.adfType === 'codeBlock'
-			  || ( currentLineNode.nodeAttached && currentLineNode.nodeAttached.adfType === 'codeBlock' ) )
-			&& typeof indexCurrentCodeBlock === 'undefined' ){
-			
-			accumulatedNodes.push( currentLineNode )
-			accumulatedNodes[ accumulatedNodes.length - 1 ].textToEmphasis = ''
-			
-			if( currentLineNode.nodeAttached
-				&& currentLineNode.nodeAttached.adfType === 'codeBlock' ){
-				currentLineNode.nodeAttached.textToEmphasis = ''
-				accumulatedNodes.push( currentLineNode.nodeAttached )
-			}
-			
-			return { accumulatedNodes, indexCurrentCodeBlock: accumulatedNodes.length - 1, indexCurrentList }
-		}
-		
-		if( currentLineNode.adfType === 'codeBlock'
-			&& typeof indexCurrentCodeBlock !== 'undefined' ){
-			accumulatedNodes[ indexCurrentCodeBlock ].textPosition = currentLineNode.textPosition
-			return { accumulatedNodes, indexCurrentList }
-		}
-		
-		if( currentLineNode.adfType === 'paragraph'
-			&& typeof indexCurrentCodeBlock !== 'undefined'
-			&& typeof accumulatedNodes[ indexCurrentCodeBlock ].textToEmphasis !== 'undefined' ){
-			
-			if( accumulatedNodes[ indexCurrentCodeBlock ].textToEmphasis !== '' )
-				accumulatedNodes[ indexCurrentCodeBlock ].textToEmphasis += '\n'
-			
-			accumulatedNodes[ indexCurrentCodeBlock ].textToEmphasis += currentLineNode.textToEmphasis
-			accumulatedNodes[ indexCurrentCodeBlock ].textPosition = currentLineNode.textPosition
-			
-			return { accumulatedNodes, indexCurrentCodeBlock, indexCurrentList }
-		}
-		
 		accumulatedNodes.push( currentLineNode )
+		
+		if( currentLineNode.adfType === 'heading' )
+			return { accumulatedNodes }
+		
 		if( currentLineNode.adfType === 'bulletList' || currentLineNode.adfType === 'orderedList' ){
 			return { accumulatedNodes, indexCurrentList: accumulatedNodes.length - 1 }
 		}
@@ -84,22 +129,26 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 		
 	}, { accumulatedNodes: [ ] } )
 	
-	const levelsPosition = accumulatedNodes.reduce( ( currentLevelList, currentList ) => {
-		return currentLevelList.includes( currentList.textPosition ) || currentLevelList.includes( currentList.textPosition + 1 )
+	///MARKDOWN logic
+	// List all different levels to consider
+	const levelsPosition = accumulatedNodes.reduce( ( currentLevelList, currentNode ) => {
+		if( currentNode.adfType !== 'orderedList'
+			&& currentNode.adfType !== 'bulletList' )
+			return currentLevelList
+		
+		return ( currentLevelList.includes( currentNode.textPosition + 2 ) || currentLevelList.includes( currentNode.textPosition + 3 ) )
 			   ? currentLevelList
-			   : currentLevelList.length === 0 || currentList.textPosition > ( currentLevelList[ currentLevelList.length - 1 ] + 1 )
-				 ? [ ...currentLevelList, currentList.textPosition ]
+			   : currentNode.textPosition + 2 > ( currentLevelList[ currentLevelList.length - 1 ] + 1 )
+				 ? [ ...currentLevelList, currentNode.textPosition + 2 ]
 				 : currentLevelList
-		// currentList.textPosition
-		// 		   ? currentLevelList.splice( 	currentLevelList.findIndex( findIndexListValues => {
-		// 				return currentList.textPosition < findIndexListValues.textPosition
-		// 			} ), 0, currentList.textPosition )
-		// 		   : currentLevelList
 	}, [ 0 ] )
 	
-	const levelsListsIndexes = levelsPosition.map( currentLevelPosition => {
-		return accumulatedNodes.filter( currentList => ( currentList.textPosition === currentLevelPosition
-														 || currentList.textPosition === currentLevelPosition + 1 ) )
+	///MARKDOWN logic
+	// Map all nodes to a specific level
+	const levelsListsIndexes = levelsPosition.map( ( currentLevelPosition, currentIndex ) => {
+		return accumulatedNodes.filter( currentList => ( currentList.textPosition >= currentLevelPosition
+														   && ( currentIndex === levelsPosition.length - 1 //this is the last level
+																|| currentList.textPosition < levelsPosition[ currentIndex + 1 ] ) ) )
 							   .map( currentList => ( {
 								   indexOfList: accumulatedNodes.indexOf( currentList ),
 								   children: [],
@@ -121,6 +170,9 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 									 : lastParentWithIndexBelow === 0
 									   ? 0
 									   : lastParentWithIndexBelow - 1
+			if( parentIndexToUse < 0 )
+				throw 'Parent list of node is empty!'
+	
 			parentList[ parentIndexToUse ].children.push( currentListValues )
 			
 			return currentTreeValues
@@ -184,6 +236,9 @@ function matchList( lineToMatch ){
 		// adfDescription.bulletList( )
 		// 			  .textItem(  )
 		const textIsCodeBlock = matchCodeBlock( list.groups.listText )
+		if( textIsCodeBlock )
+			textIsCodeBlock.textPosition = lineToMatch.indexOf( list.groups.listText )
+		
 		return { 	adfType	: 		list.groups.orderedNumber
 										? "orderedList"
 										: "bulletList",
@@ -204,7 +259,8 @@ function matchCodeBlock( lineToMatch ){
 		
 		return { 	adfType: 		"codeBlock",
 			typeParam:		codeBlock.groups.Language,
-			textPosition: 	lineToMatch.indexOf( '```' ) }
+			textPosition: 	lineToMatch.indexOf( '```' ),
+			textToEmphasis: '' }
 	}
 	
 	return null
@@ -225,13 +281,13 @@ function matchBlockQuote( lineToMatch ){
 }
 
 function matchParagraph( lineToMatch ){
-	const paragraph = lineToMatch.match( /^(?:[\s])*(?<paragraphText>[^\n]+)$/i )
+	const paragraph = lineToMatch.match( /^(?:[\s]*)(?<paragraphText>[^\n]+)$/ )
 	if( paragraph
 		&& paragraph.groups
 		&& paragraph.groups.paragraphText ){
 		return { 	adfType : 		"paragraph",
 			textToEmphasis: paragraph.groups.paragraphText,
-			textPosition: 	!paragraph.groups.paragraphText.match( /^(?:[\s])*$/ )
+			textPosition: 	!paragraph.groups.paragraphText.match( /^(?:[\s]*)$/ )
 							 ? lineToMatch.indexOf( paragraph.groups.paragraphText )
 							 : lineToMatch.length }
 	}
@@ -259,7 +315,7 @@ function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameI
 		
 		if( currentNode.node.adfType !== 'codeBlock'
 			&& currentNode.node.textToEmphasis )
-			attachTextToNodeWithEmphasis( nodeToAttachTextTo, currentNode.node.textToEmphasis )
+			attachItemNode( nodeToAttachTextTo, currentNode.node.textToEmphasis )
 		
 		else if( currentNode.node.adfType === 'codeBlock' )
 			attachTextToNodeRaw( nodeToAttachTextTo, currentNode.node.textToEmphasis )
@@ -303,7 +359,110 @@ function addTypeToNode( adfNodeToAttachTo, adfType, typeParams ){
 }
 
 
-function attachTextToNodeWithEmphasis( parentNode, textToEmphasis ){
+function attachItemNode( nodeToAttachTo, rawText ) {
+	const slicedInline = sliceInLineCode( rawText )
+	
+	const { slicedInlineAndEmoji } = slicedInline.reduce( ( { slicedInlineAndEmoji }, currentSlice ) => {
+		if( !currentSlice.isMatching ){
+			const slicedEmoji = sliceEmoji( currentSlice.text )
+			
+			return { slicedInlineAndEmoji: slicedInlineAndEmoji.concat( slicedEmoji ) }
+		}
+		
+		slicedInlineAndEmoji.push( currentSlice )
+		return { slicedInlineAndEmoji }
+	}, { slicedInlineAndEmoji: [] } )
+	
+	const { slicedInlineAndEmojiAndLink } = slicedInlineAndEmoji.reduce( ( { slicedInlineAndEmojiAndLink }, currentSlice ) => {
+		if( !currentSlice.isMatching ){
+			const slicedLink = sliceLink( currentSlice.text )
+			
+			return { slicedInlineAndEmojiAndLink: slicedInlineAndEmojiAndLink.concat( slicedLink ) }
+		}
+		
+		slicedInlineAndEmojiAndLink.push( currentSlice )
+		return { slicedInlineAndEmojiAndLink }
+	}, { slicedInlineAndEmojiAndLink: [] } )
+	
+	for( const currentSlice of slicedInlineAndEmojiAndLink ) {
+		switch( currentSlice.type ){
+			case 'inline':
+				const inlineCodeNode = new Text( currentSlice.text, marks().code() )
+				nodeToAttachTo.content.add( inlineCodeNode )
+				break
+			
+			case 'emoji':
+				const emojiNode = new Emoji( {shortName: currentSlice.text } )
+				nodeToAttachTo.content.add( emojiNode )
+				break
+			
+			case 'link':
+				const linkNode = new Text( currentSlice.text,
+										   marks().link( currentSlice.optionalText1,
+														 currentSlice.optionalText2 ) )
+				nodeToAttachTo.content.add( linkNode )
+				break
+			
+			case 'image':
+				const imageNode = new Text( currentSlice.text,
+											marks().link( currentSlice.optionalText1,
+														  currentSlice.optionalText2 ) )
+				nodeToAttachTo.content.add( imageNode )
+				break
+			
+			default:
+				attachTextToNodeSliceEmphasis( nodeToAttachTo, currentSlice.text )
+				// const textNode = new Text( currentSlice.text, marksToUse )
+				// nodeToAttachTo.content.add( textNode )
+		}
+	}
+}
+
+function sliceInLineCode( rawText ){
+	return sliceOneMatchFromRegexp( rawText, 'inline', /(?<nonMatchBefore>[^`]*)(?:`(?<match>[^`]+)`)(?<nonMatchAfter>[^`]*)/g )
+}
+
+function sliceEmoji( rawText ){
+	return sliceOneMatchFromRegexp( rawText, 'emoji',/(?<nonMatchBefore>[^`]*)(?::(?<match>[^`\s]+):)(?<nonMatchAfter>[^`]*)/g )
+}
+
+function sliceLink( rawText ){
+	return sliceOneMatchFromRegexp( rawText, 'link',/(?<nonMatchBefore>[^`]*)(?:\[(?<match>[^\[\]]+)\]\((?<matchOptional>[^\(\)"]+)(?: "(?<matchOptional2>[^"]*)")?\))(?<nonMatchAfter>[^`]*)/g )
+}
+
+function sliceOneMatchFromRegexp( rawText, typeTag, regexpToSliceWith ){
+	let slicesResult = [ ]
+	let snippet = null
+	let hasAtLeastOneExpression = false
+	
+	while( ( snippet = regexpToSliceWith.exec( rawText ) ) ) {
+		hasAtLeastOneExpression = true
+		if( snippet.groups.nonMatchBefore ){
+			slicesResult.push( { isMatching: false, text: snippet.groups.nonMatchBefore } )
+		}
+		
+		if( snippet.groups.match ){
+			slicesResult.push( {
+								   isMatching: 		true,
+								   type: 			typeTag,
+								   text: 			snippet.groups.match,
+								   optionalText1: 	snippet.groups.matchOptional,
+								   optionalText2: 	snippet.groups.matchOptional2
+							   } )
+		}
+		
+		if( snippet.groups.nonMatchAfter ){
+			slicesResult.push( { isMatching: false, text: snippet.groups.nonMatchAfter } )
+		}
+	}
+	
+	if( !hasAtLeastOneExpression )
+		slicesResult.push( { isMatching: false, text: rawText } )
+	
+	return slicesResult
+}
+
+function attachTextToNodeSliceEmphasis( parentNode, textToEmphasis ){
 	const lineUnderscored = textToEmphasis.replace( /\*/g, '_' )
 	let currentDecorationLevel = 0
 	//see convertDecorationLevelToMark
@@ -331,7 +490,9 @@ function attachTextToNodeWithEmphasis( parentNode, textToEmphasis ){
 			let decorationToUse = convertDecorationLevelToMark( currentDecorationLevel )
 			
 			if( expressionBuffer !== '' ){
-				textWithInline( parentNode, expressionBuffer, decorationToUse )
+				const textNode = new Text( expressionBuffer, decorationToUse )
+				parentNode.content.add( textNode )
+				// textWithInline( parentNode, expressionBuffer, decorationToUse )
 			}
 			else {
 				if( potentialUnderscorePair )
@@ -344,8 +505,12 @@ function attachTextToNodeWithEmphasis( parentNode, textToEmphasis ){
 			expressionBuffer = ''
 		}
 	}
-	if( expressionBuffer !== '' )
-		textWithInline( parentNode, expressionBuffer, convertDecorationLevelToMark( currentDecorationLevel ) )
+	
+	if( expressionBuffer !== '' ){
+		const textNode = new Text( expressionBuffer, convertDecorationLevelToMark( currentDecorationLevel ) )
+		parentNode.content.add( textNode )
+	}
+	// textWithInline( parentNode, expressionBuffer, convertDecorationLevelToMark( currentDecorationLevel ) )
 }
 
 function convertDecorationLevelToMark( decorationLevelToConvert ){
@@ -358,69 +523,6 @@ function convertDecorationLevelToMark( decorationLevelToConvert ){
 			   : null
 }
 
-function textWithInline( nodeToAttachTo, rawText, marksToUse ){
-	const strInlineRegExp = '(?<textBefore>[^`]*)' +
-							'(?:' +
-							'`(?<inlineCode>[^`]+)`' +
-							'|' + '!\\[(?<imageTitle>[^\\[\\]]+)\\]\\((?<imageURL>[^\\(\\)"]+)(?: "(?<imageHover>[^"]*)")?\\)' +
-							'|' + '\\[(?<linkTitle>[^\\[\\]]+)\\]\\((?<linkURL>[^\\(\\)"]+)(?: "(?<linkHover>[^"]*)")?\\)' +
-							'|' + ':(?<emojiCode>[^`]+):' +
-							')' +
-							'(?<textAfter>[^`]*)'
-	const inlineRegExp = new RegExp( strInlineRegExp, 'g' )
-	
-	let snippet = null
-	let hasAtLeastOneExpression = false
-	while( ( snippet = inlineRegExp.exec( rawText ) ) ) {
-		hasAtLeastOneExpression = true
-		if( snippet.groups.textBefore ){
-			const textNode = new Text( snippet.groups.textBefore, marksToUse )
-			nodeToAttachTo.content.add( textNode )
-		}
-		
-		if( snippet.groups.inlineCode ){
-			const textNode = new Text( snippet.groups.inlineCode, marks().code() )
-			nodeToAttachTo.content.add( textNode )
-		}
-		
-		if( snippet.groups.emojiCode ){
-			const emojiNode = new Emoji( {shortName: snippet.groups.emojiCode} )
-			nodeToAttachTo.content.add( emojiNode )
-		}
-		
-		if( snippet.groups.imageTitle
-			|| snippet.groups.imageURL
-			|| snippet.groups.imageHover ){
-			// const textNode = new Text( snippet.groups.inlineCode, marks().code() )
-			// nodeToAttachTo.content.add( textNode )
-		}
-		
-		if( snippet.groups.linkTitle
-			|| snippet.groups.linkURL
-			|| snippet.groups.linkHover ){
-			const textNode = new Text( snippet.groups.linkTitle,
-									   marks().link( snippet.groups.linkURL,
-													 snippet.groups.linkHover ) )
-			nodeToAttachTo.content.add( textNode )
-		}
-		
-		// if( snippet.groups.imageTitle ){
-		// 	const textNode = new Text( link.groups.inlineCode, marks().code() )
-		// 	nodeToAttachTo.content.add( textNode )
-		// }
-		
-		if( snippet.groups.textAfter ){
-			const textNode = new Text( snippet.groups.textAfter, marksToUse )
-			nodeToAttachTo.content.add( textNode )
-		}
-	}
-	
-	if( !hasAtLeastOneExpression ){
-		const textNode = new Text( rawText, marksToUse )
-		nodeToAttachTo.content.add( textNode )
-	}
-	
-}
 
 function attachTextToNodeRaw( nodeToAttachTo, textToAttach ){
 	const textNode = new Text( textToAttach )

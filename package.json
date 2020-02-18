@@ -1,6 +1,6 @@
 {
   "name": "md-to-adf",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Translate Markdown (Github) into Atlassian Document Format (ADF)",
   "main": "dist/index.js",
   "scripts": {
@@ -21,7 +21,8 @@
     "adf"
   ],
   "dependencies": {
-    "adf-builder": "^3.3.0"
+    "adf-builder": "^3.3.0",
+    "marked": "^0.8.0"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.20.5",

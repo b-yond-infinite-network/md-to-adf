@@ -22,9 +22,9 @@ Feature: Conversion of Codeblock markdown
     Given the markdown in GITHUB is :
       |'# With some heading                                                                                            |
       |'* ```Javascript                                                                                                |
-      |'  const thisCode = 'this code is so good'                                                                      |
-      |'  const youshould = 'have more'                                                                                |
-      |'  ```                                                                                                          |
+      |'const thisCode = 'this code is so good'                                                                        |
+      |'const youshould = 'have more'                                                                                  |
+      |'```                                                                                                            |
     When we translate it in ADF
     Then the ADF chunk at content path [ 0 ] has type 'heading'
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "With some heading"}'
@@ -36,48 +36,48 @@ Feature: Conversion of Codeblock markdown
   Scenario: Base formatting - Unordered list level 1
     Given the markdown in GITHUB is '* This is an unordered list of level 1'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'bulletList'
+    Then the ADF chunk at content path [ 0 ] has type 'bulletList'
 
   Scenario: Base formatting - Ordered list level 1
     Given the markdown in GITHUB is '1. This is an ordered list of level 1'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'orderedList'
+    Then the ADF chunk at content path [ 0 ] has type 'orderedList'
 
   Scenario: Formatting - Simple unordered list
     Given the markdown in GITHUB the same than in the markdown file named 'simple-unordered-list'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'bulletList'
+    Then the ADF chunk at content path [ 0 ] has type 'bulletList'
     And the ADF document content has all the object defined in json file named 'simple-unordered-list'
 
   Scenario: Formatting - Complex unordered list
     Given the markdown in GITHUB the same than in the markdown file named 'complex-unordered-list'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'bulletList'
+    Then the ADF chunk at content path [ 0 ] has type 'bulletList'
     And the ADF document content has all the object defined in json file named 'complex-unordered-list'
 
   Scenario: Formatting - Simple ordered list
     Given the markdown in GITHUB the same than in the markdown file named 'simple-ordered-list'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'orderedList'
+    Then the ADF chunk at content path [ 0 ] has type 'orderedList'
     And the ADF document content has all the object defined in json file named 'simple-ordered-list'
 
   Scenario: Formatting - Complex ordered list
     Given the markdown in GITHUB the same than in the markdown file named 'complex-ordered-list'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'orderedList'
+    Then the ADF chunk at content path [ 0 ] has type 'orderedList'
     And the ADF document content has all the object defined in json file named 'complex-ordered-list'
 
   Scenario: Formatting - Mix unordered/ordered list multilevel
     Given the markdown in GITHUB the same than in the markdown file named 'mix-lists'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'bulletList'
+    Then the ADF chunk at content path [ 0 ] has type 'bulletList'
     And the ADF document content has all the object defined in json file named 'mix-lists'
 
 
   Scenario: Base formatting - Inline code in a paragraph
     Given the markdown in GITHUB is 'Test with `inline code` and an end sentence'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'paragraph'
+    Then the ADF chunk at content path [ 0 ] has type 'paragraph'
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "Test with "}'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": "inline code", "marks": [ { "type": "code" } ] }'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": " and an end sentence"}'
@@ -85,7 +85,7 @@ Feature: Conversion of Codeblock markdown
   Scenario: Base formatting - Multiple inline code in a paragraph
     Given the markdown in GITHUB is 'Test with `inline code` and `another one` in a sentence'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'paragraph'
+    Then the ADF chunk at content path [ 0 ] has type 'paragraph'
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "Test with "}'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": "inline code", "marks": [ { "type": "code" } ] }'
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": " and "}'
@@ -95,7 +95,7 @@ Feature: Conversion of Codeblock markdown
   Scenario: Base formatting - Inline code in a unordered list
     Given the markdown in GITHUB is '* Test with `inline code` and `another one` in a unordered list'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'bulletList'
+    Then the ADF chunk at content path [ 0 ] has type 'bulletList'
     And the ADF chunk at content path [ 0, 0 ] has type 'listItem'
     And the ADF chunk at content path [ 0, 0, 0 ] contains '{"type": "text", "text": "Test with "}'
     And the ADF chunk at content path [ 0, 0, 0 ] contains '{ "type": "text", "text": "inline code", "marks": [ { "type": "code" } ] }'
@@ -106,7 +106,7 @@ Feature: Conversion of Codeblock markdown
   Scenario: Base formatting - Inline code in a ordered list
     Given the markdown in GITHUB is '1. Test with `inline code` and `another one` in a ordered list'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'orderedList'
+    Then the ADF chunk at content path [ 0 ] has type 'orderedList'
     And the ADF chunk at content path [ 0, 0 ] has type 'listItem'
     And the ADF chunk at content path [ 0, 0, 0 ] contains '{"type": "text", "text": "Test with "}'
     And the ADF chunk at content path [ 0, 0, 0 ] contains '{ "type": "text", "text": "inline code", "marks": [ { "type": "code" } ] }'
@@ -117,7 +117,7 @@ Feature: Conversion of Codeblock markdown
   Scenario: Base formatting - Inline code in a blockquote
     Given the markdown in GITHUB is '> Test with `inline code` and `another one` in a block quote'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'blockquote'
+    Then the ADF chunk at content path [ 0 ] has type 'blockquote'
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "Test with "}'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": "inline code", "marks": [ { "type": "code" } ] }'
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": " and "}'
@@ -128,14 +128,14 @@ Feature: Conversion of Codeblock markdown
   Scenario: Base formatting - Link in a paragraph
     Given the markdown in GITHUB is 'Test with paragraph and a link [TitleOfLink](urltogoto)'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'paragraph'
+    Then the ADF chunk at content path [ 0 ] has type 'paragraph'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": "Test with paragraph and a link "}'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": "TitleOfLink", "marks": [ { "type": "link", "attrs": { "href": "urltogoto" } } ] }'
 
   Scenario: Base formatting - Link in a paragraph with a title
     Given the markdown in GITHUB is 'Test with paragraph and a link [TitleOfLink](urltogoto "mytitle")'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'paragraph'
+    Then the ADF chunk at content path [ 0 ] has type 'paragraph'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": "Test with paragraph and a link "}'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": "TitleOfLink", "marks": [ { "type": "link", "attrs": { "href": "urltogoto", "title": "mytitle" } } ] }'
 
@@ -143,7 +143,7 @@ Feature: Conversion of Codeblock markdown
   Scenario: Base formatting - Emoji in a paragraph
     Given the markdown in GITHUB is 'Test with paragraph and an :smile: emoji'
     When we translate it in ADF
-    Then the 1st ADF chunk has type 'paragraph'
+    Then the ADF chunk at content path [ 0 ] has type 'paragraph'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": "Test with paragraph and an "}'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "emoji", "attrs": { "shortName": "smile" } }'
     And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": " emoji"}'
