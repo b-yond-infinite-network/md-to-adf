@@ -29,11 +29,11 @@
   "devDependencies": {
     "@zeit/ncc": "^0.20.5",
     "codecov": "^4.0.0-0",
-    "husky": "^3.0.9",
-    "jest-cucumber-fusion": "^0.6.1",
     "commitizen": "^4.0.3",
-    "cz-conventional-changelog": "^3.1.0",
     "conventional-changelog-jscs": "^0.1.0",
+    "cz-conventional-changelog": "^3.1.0",
+    "husky": "^3.0.9",
+    "jest-cucumber-fusion": "^0.6.3",
     "semantic-release": "^17.0.2"
   },
   "husky": {
