@@ -94,8 +94,8 @@ Feature: Complex formatting mix
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "The following raw Github body"}'
     And the ADF chunk at content path [ 1 ] has type 'codeBlock'
     And the ADF chunk at content path [ 1 ] contains '{"type": "text", "text": "When we **try** something like this:\n  ```cucumber\nScenario Outline: whatever Scenario\n    When some <variable> is also used with 'another_variable'\n     Then ....\n     ....\n     Example Outline:\n     |   variable   |\n     |     value1    |\n     |     value2    |"}'
-#
-#
+
+
   Scenario: Multiple block with empty lines and code block with weird indent
     Given the markdown in GITHUB is :
       |'The following raw Github body                                                                                  |
@@ -144,12 +144,16 @@ Feature: Complex formatting mix
     And the ADF chunk at content path [ 3 ] has type 'paragraph'
     And the ADF chunk at content path [ 3 ] contains '{"type": "text", "text": "It seem that the regexp priority in jest-cucumber is wrong when there's more than 1 entity in the sentence"}'
     And the ADF chunk at content path [ 4 ] has type 'paragraph'
-    And the ADF chunk at content path [ 4 ] contains '{"type": "text", "text": "Should be looking like this: <img width=\"797\" alt=\"Screen Shot 2020-01-13 at 5 45 11 PM\" src=\"https://user-images.githubusercontent.com/662628/72298589-7fdef300-362c-11ea-81f4-bdb1ca679f58.png\">"}'
+    And the ADF chunk at content path [ 4 ] contains '{"type": "text", "text": " "}'
     And the ADF chunk at content path [ 5 ] has type 'paragraph'
-    And the ADF chunk at content path [ 5 ] contains '{"type": "text", "text": "Being able to write scripts with flexible spacing, for example:"}'
-    And the ADF chunk at content path [ 6 ] has type 'codeBlock'
-    And the ADF chunk at content path [ 6 ] contains '{"type": "text", "text": "myVal = something.getAttribute(“blabla”)\n                 .ifElse(valIfTrue, valIfFalse)\n                 .something(2)"}'
+    And the ADF chunk at content path [ 5 ] contains '{"type": "text", "text": "Should be looking like this: <img width=\"797\" alt=\"Screen Shot 2020-01-13 at 5 45 11 PM\" src=\"https://user-images.githubusercontent.com/662628/72298589-7fdef300-362c-11ea-81f4-bdb1ca679f58.png\">"}'
+    And the ADF chunk at content path [ 6 ] has type 'paragraph'
+    And the ADF chunk at content path [ 6 ] contains '{"type": "text", "text": " "}'
     And the ADF chunk at content path [ 7 ] has type 'paragraph'
-    And the ADF chunk at content path [ 7 ] contains '{"type": "text", "text": "or this, when @lalala  will be done with her current pr ..."}'
+    And the ADF chunk at content path [ 7 ] contains '{"type": "text", "text": "Being able to write scripts with flexible spacing, for example:"}'
     And the ADF chunk at content path [ 8 ] has type 'codeBlock'
-    And the ADF chunk at content path [ 8 ] contains '{"type": "text", "text": "enodeB(\n  myAttribute = “are spread”,\n  onMany = lines,\n  andSpacing = “is flexible”)"}'
+    And the ADF chunk at content path [ 8 ] contains '{"type": "text", "text": "myVal = something.getAttribute(“blabla”)\n                 .ifElse(valIfTrue, valIfFalse)\n                 .something(2)"}'
+    And the ADF chunk at content path [ 9 ] has type 'paragraph'
+    And the ADF chunk at content path [ 9 ] contains '{"type": "text", "text": "or this, when @lalala  will be done with her current pr ..."}'
+    And the ADF chunk at content path [ 10 ] has type 'codeBlock'
+    And the ADF chunk at content path [ 10 ] contains '{"type": "text", "text": "enodeB(\n  myAttribute = “are spread”,\n  onMany = lines,\n  andSpacing = “is flexible”)"}'
