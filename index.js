@@ -13,10 +13,9 @@ function translateGITHUBMarkdownToADF( markdownText ){
 
 
 function buildTreeFromMarkdown( rawTextMarkdown ){
-	
 	///MARDKOWN logic - closing code blocks
 	//  When a code block is open, it should be closed by a triple caret, everything in between is code
-	const { codeBlockHandled } = rawTextMarkdown.split( '\n' ).reduce( ( { codeBlockHandled, indexCurrentCodeBloc }, currentLine, indexCurrentLine ) => {
+	const { codeBlockHandled } = rawTextMarkdown.split( /\r\n|\r|\n/ ).reduce( ( { codeBlockHandled, indexCurrentCodeBloc }, currentLine, indexCurrentLine ) => {
 		const lineTranslation = translateMarkdownLineToADF( currentLine )
 		
 		if( typeof indexCurrentCodeBloc === "undefined"
