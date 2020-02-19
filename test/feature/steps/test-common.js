@@ -30,6 +30,9 @@ Before( ( ) => {
 	jiraContent		= ''
 } )
 
+Given( 'the markdown has a mix of carriage return and breakline', () => {
+	jiraContent = "This is a paragraph, with a breakline\nand a carriage return\r"
+})
 
 Given( /^the markdown in GITHUB is '(.*)'$/, gitthubMarkdown => {
 	jiraContent = gitthubMarkdown

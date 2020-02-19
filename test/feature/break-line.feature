@@ -1,5 +1,12 @@
 Feature: Conversion of Header markdown
 
+  Scenario: Mix break line and carriage return
+
+    Given the markdown has a mix of carriage return and breakline
+    When we translate it in ADF
+    Then the ADF chunk at content path [ 0 ] has type 'paragraph'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "This is a paragraph, with a breakline and a carriage return"}'
+
   Scenario: Breaking a paragraph
     Given the markdown in GITHUB is :
       |'This is a paragraph, with a none breaking breakline                                                             |
@@ -7,7 +14,6 @@ Feature: Conversion of Header markdown
       |'use                                                                                                             |
       |''                                                                                                               |
       |'Double empty line, to really break the line                                                                     |
-
     When we translate it in ADF
     Then the ADF chunk at content path [ 0 ] has type 'paragraph'
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "This is a paragraph, with a none breaking breakline so that it fits in a 80 columnar size. But then we have to use"}'
@@ -20,7 +26,6 @@ Feature: Conversion of Header markdown
       |'but since it's a header the rest is a paragraph                                                                 |
       |'   '                                                                                                            |
       |'And then another paragraph after an empty line                                                                  |
-
     When we translate it in ADF
     Then the ADF chunk at content path [ 0 ] has type 'heading'
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "This is a header, with a none breaking breakline"}'
