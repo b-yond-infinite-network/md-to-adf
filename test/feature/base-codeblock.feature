@@ -30,8 +30,10 @@ Feature: Conversion of Codeblock markdown
     And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "With some heading"}'
     And the ADF chunk at content path [ 1 ] has type 'bulletList'
     And the ADF chunk at content path [ 1, 0 ] has type 'listItem'
-    And the ADF chunk at content path [ 1, 0, 0 ] has type 'codeBlock'
-    And the ADF chunk at content path [ 1, 0, 0 ] contains '{"text": "const thisCode = 'this code is so good'\nconst youshould = 'have more'", "type": "text"}'
+    And the ADF chunk at content path [ 1, 0, 0 ] has type 'paragraph'
+    And the ADF chunk at content path [ 1, 0, 0 ] contains '{"type": "text", "text": " "}'
+    And the ADF chunk at content path [ 1, 0, 1 ] has type 'codeBlock'
+    And the ADF chunk at content path [ 1, 0, 1 ] contains '{"text": "const thisCode = 'this code is so good'\nconst youshould = 'have more'", "type": "text"}'
 
   Scenario: Base formatting - Unordered list level 1
     Given the markdown in GITHUB is '* This is an unordered list of level 1'
@@ -118,11 +120,12 @@ Feature: Conversion of Codeblock markdown
     Given the markdown in GITHUB is '> Test with `inline code` and `another one` in a block quote'
     When we translate it in ADF
     Then the ADF chunk at content path [ 0 ] has type 'blockquote'
-    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "Test with "}'
-    And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": "inline code", "marks": [ { "type": "code" } ] }'
-    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": " and "}'
-    And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": "another one", "marks": [ { "type": "code" } ] }'
-    And the ADF chunk at content path [ 0 ] contains '{ "type": "text", "text": " in a block quote"}'
+    And the ADF chunk at content path [ 0, 0 ] has type 'paragraph'
+    And the ADF chunk at content path [ 0, 0 ] contains '{"type": "text", "text": "Test with "}'
+    And the ADF chunk at content path [ 0, 0 ] contains '{ "type": "text", "text": "inline code", "marks": [ { "type": "code" } ] }'
+    And the ADF chunk at content path [ 0, 0 ] contains '{"type": "text", "text": " and "}'
+    And the ADF chunk at content path [ 0, 0 ] contains '{ "type": "text", "text": "another one", "marks": [ { "type": "code" } ] }'
+    And the ADF chunk at content path [ 0, 0 ] contains '{ "type": "text", "text": " in a block quote"}'
 
 
   Scenario: Base formatting - Link in a paragraph

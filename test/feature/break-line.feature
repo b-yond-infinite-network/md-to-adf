@@ -93,6 +93,7 @@ Feature: Conversion of Header markdown
       |'An empty line breaks the quote block                                                                            |
     When we translate it in ADF
     Then the ADF chunk at content path [ 0 ] has type 'blockquote'
-    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "this is a block quote, with a none breaking breakline so that it fits in a 80 columnar size and any text in the line"}'
+    Then the ADF chunk at content path [ 0, 0 ] has type 'paragraph'
+    And the ADF chunk at content path [ 0, 0 ] contains '{"type": "text", "text": "this is a block quote, with a none breaking breakline so that it fits in a 80 columnar size and any text in the line"}'
     And the ADF chunk at content path [ 1 ] has type 'paragraph'
     And the ADF chunk at content path [ 1 ] contains '{"type": "text", "text": "An empty line breaks the quote block"}'

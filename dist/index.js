@@ -130,10 +130,35 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 	} )
 	
 	///MARKDOWN logic
+	// blockquote handling => blockquote start with each line identify with a caret
+	// any interruption (line break) create a new blockquote
+	const { blockquotedNodes } = cleanedCodeBlock.reduce( ( { blockquotedNodes, currentLastThatWasBlockQuote }, currentLineNode ) => {
+		
+		if( !currentLastThatWasBlockQuote
+			&& currentLineNode.adfType === 'blockQuote' ){
+			blockquotedNodes.push( currentLineNode )
+			return { blockquotedNodes, currentLastThatWasBlockQuote: currentLineNode }
+		}
+		
+		//this is a non-empty paragraph, if we are already filling up a paragraph, let's add the text inside
+		if( currentLastThatWasBlockQuote
+			&& currentLineNode.adfType === 'blockQuote' ){
+			currentLastThatWasBlockQuote.textToEmphasis = currentLastThatWasBlockQuote.textToEmphasis +
+														  ' ' + currentLineNode.textToEmphasis
+			return { blockquotedNodes, currentLastThatWasBlockQuote }
+		}
+		
+		//this is non-blockquote node, we add it to the list
+		blockquotedNodes.push( currentLineNode )
+		return { blockquotedNodes }
+		
+	}, { blockquotedNodes: [ ] } )
+	
+	///MARKDOWN logic
 	// empty line handling => heading is an exception, otherwise non-empty line aggregate in the parent element
 	// For all other type, following a markdown with any paragraph of text is considered a continuation, so we aggregate
 	//  all subsequent text into the same parent element (paragraph, list item, ...)
-	const { breakedLineNodes } = cleanedCodeBlock.reduce( ( { breakedLineNodes, currentParent }, currentLineNode ) => {
+	const { breakedLineNodes } = blockquotedNodes.reduce( ( { breakedLineNodes, currentParent, lastWasAlsoAParagraph }, currentLineNode ) => {
 		
 		if( currentLineNode.adfType === 'heading'
 			|| currentLineNode.adfType === 'codeBlock' ){
@@ -146,8 +171,16 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 			return { breakedLineNodes, currentParent: currentLineNode }
 		}
 		
-		if( /^(?:[\s]*)$/.test( currentLineNode.textToEmphasis ) ) {
+		if( !lastWasAlsoAParagraph
+			&& /^(?:[\s]*)$/.test( currentLineNode.textToEmphasis ) ) {
 			//we're breaking into a new paragraph
+			return { breakedLineNodes, lastWasAlsoAParagraph: true }
+		}
+		
+		if( lastWasAlsoAParagraph
+			&& /^(?:[\s]*)$/.test( currentLineNode.textToEmphasis ) ) {
+			//we've double break, we add a paragraph
+			breakedLineNodes.push( currentLineNode )
 			return { breakedLineNodes }
 		}
 		
@@ -167,6 +200,8 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 		return { breakedLineNodes, currentParent: currentLineNode }
 		
 	}, { breakedLineNodes: [ ] } )
+	
+	
 	
 	///MARKDOWN logic
 	// Realign children nodes to orderedList and bulletList
@@ -371,8 +406,8 @@ function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameI
 		const nodeOrListItem = currentNode.node.adfType === 'orderedList' || currentNode.node.adfType === 'bulletList'
 							   ? nodeOrListNode.content.add( new ListItem() )
 							   : nodeOrListNode
-		const nodeToAttachTextTo = currentNode.node.adfType === 'orderedList' || currentNode.node.adfType === 'bulletList'
-								   ? currentNode.node.textToEmphasis || currentNode.children.length === 0
+		const nodeToAttachTextTo = currentNode.node.adfType === 'orderedList' || currentNode.node.adfType === 'bulletList' || currentNode.node.adfType === 'blockQuote'
+								   ? typeof currentNode.node.textToEmphasis !== 'undefined' || currentNode.children.length === 0
 									 ? nodeOrListItem.content.add( new Paragraph() )
 									 : nodeOrListItem
 								   : nodeOrListItem
@@ -380,7 +415,11 @@ function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameI
 		if( currentNode.node.adfType !== 'codeBlock'
 			&& currentNode.node.textToEmphasis )
 			attachItemNode( nodeToAttachTextTo, currentNode.node.textToEmphasis )
-		
+
+		else if( currentNode.node.adfType !== 'codeBlock'
+				 && currentNode.node.textToEmphasis === '' )
+			attachItemNode( nodeToAttachTextTo, ' ' )
+			
 		else if( currentNode.node.adfType === 'codeBlock' )
 			attachTextToNodeRaw( nodeToAttachTextTo, currentNode.node.textToEmphasis )
 		
