@@ -159,3 +159,30 @@ Feature: Conversion of Emphasis markdown
   And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "header", "marks": [ { "type": "strong" }, { "type": "em" } ] }'
   And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": " ", "marks": [ { "type": "strong" } ] }'
   And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "tag" }'
+
+
+  Scenario: Base formatting - strikethrough (GH extension)
+    Given the markdown in GITHUB is 'This is a block of text ~~strikedthrough~~'
+    When we translate it in ADF
+    Then the ADF chunk at content path [ 0 ] has type 'paragraph'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "This is a block of text "}'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "strikedthrough", "marks": [ { "type": "strike" } ] }'
+
+
+  Scenario: Base formatting - multimix of emphasis with strikethrough (GH extension)
+    Given the markdown in GITHUB is 'This *is **an** italic and ~~strikedthrough~~* **bold and ~~strikedthrough~~ *header ~~bold/italic and strikedthrough~~* **tag'
+    When we translate it in ADF
+    Then the ADF chunk at content path [ 0 ] has type 'paragraph'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "This "}'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "is ", "marks": [ { "type": "em" } ] }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "an", "marks": [ { "type": "strong" }, { "type": "em" } ] }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": " italic and ", "marks": [ { "type": "em" } ] }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "strikedthrough", "marks": [ { "type": "strike" }, { "type": "em" } ] }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": " " }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "bold and ", "marks": [ { "type": "strong" } ] }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "strikedthrough", "marks": [ { "type": "strike" }, { "type": "strong" } ] }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": " ", "marks": [ { "type": "strong" } ] }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "header ", "marks": [ { "type": "strong" }, { "type": "em" } ] }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "bold/italic and strikedthrough", "marks": [ { "type": "strike" }, { "type": "strong" }, { "type": "em" } ] }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": " ", "marks": [ { "type": "strong" } ] }'
+    And the ADF chunk at content path [ 0 ] contains '{"type": "text", "text": "tag" }'
