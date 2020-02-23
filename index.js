@@ -510,6 +510,7 @@ function attachTextToNodeSliceEmphasis( parentNode, textToEmphasis ){
 	// 3 => bold and italic
 	
 	let potentialUnderscorePair = false
+	let strikedThrough			= false
 	let expressionBuffer		= ''
 	for( const currentCharacterIndex in lineUnderscored ){
 		
@@ -524,8 +525,20 @@ function attachTextToNodeSliceEmphasis( parentNode, textToEmphasis ){
 			}
 		}
 		
+		if( currentCharacterIndex > 0
+			&& lineUnderscored[ currentCharacterIndex ] === '~'
+			&& lineUnderscored[ currentCharacterIndex - 1 ] === '~' ){
+			const textNode = new Text( expressionBuffer.slice( 0, expressionBuffer.length - 2 ),
+									   convertDecorationLevelToMark( currentDecorationLevel, strikedThrough ) )
+			parentNode.content.add( textNode )
+			
+			expressionBuffer = ''
+			strikedThrough = !strikedThrough
+		}
+
+		
 		if( lineUnderscored[ currentCharacterIndex ] === '_' ){
-			let decorationToUse = convertDecorationLevelToMark( currentDecorationLevel )
+			let decorationToUse = convertDecorationLevelToMark( currentDecorationLevel, strikedThrough )
 			
 			if( expressionBuffer !== '' ){
 				const textNode = new Text( expressionBuffer, decorationToUse )
@@ -545,13 +558,22 @@ function attachTextToNodeSliceEmphasis( parentNode, textToEmphasis ){
 	}
 	
 	if( expressionBuffer !== '' ){
-		const textNode = new Text( expressionBuffer, convertDecorationLevelToMark( currentDecorationLevel ) )
+		const textNode = new Text( expressionBuffer, convertDecorationLevelToMark( currentDecorationLevel, strikedThrough ) )
 		parentNode.content.add( textNode )
 	}
 	// textWithInline( parentNode, expressionBuffer, convertDecorationLevelToMark( currentDecorationLevel ) )
 }
 
-function convertDecorationLevelToMark( decorationLevelToConvert ){
+function convertDecorationLevelToMark( decorationLevelToConvert, addStrikethrough ){
+	if( addStrikethrough )
+		return decorationLevelToConvert === 1
+			   ? marks().strike().em()
+			   : decorationLevelToConvert === 2
+				 ? marks().strike().strong()
+				 : decorationLevelToConvert === 3
+				   ? marks().strike().strong().em()
+				   : marks().strike()
+
 	return decorationLevelToConvert === 1
 		   ? marks().em()
 		   : decorationLevelToConvert === 2
