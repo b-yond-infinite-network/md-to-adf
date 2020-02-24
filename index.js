@@ -1,4 +1,4 @@
-const { Document, marks, Heading, Text, Emoji, BulletList, OrderedList, ListItem, CodeBlock, BlockQuote, Paragraph }	= require( 'adf-builder' )
+const { Document, marks, Heading, Text, Emoji, BulletList, OrderedList, ListItem, CodeBlock, BlockQuote, Paragraph, Rule }	= require( 'adf-builder' )
 
 function translateGITHUBMarkdownToADF( markdownText ){
 	
@@ -64,6 +64,7 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 			return currentNode
 	} )
 	
+	
 	///MARKDOWN logic
 	// blockquote handling => blockquote start with each line identify with a caret
 	// any interruption (line break) create a new blockquote
@@ -89,6 +90,7 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 		
 	}, { blockquotedNodes: [ ] } )
 	
+	
 	///MARKDOWN logic
 	// empty line handling => heading is an exception, otherwise non-empty line aggregate in the parent element
 	// For all other type, following a markdown with any paragraph of text is considered a continuation, so we aggregate
@@ -96,6 +98,7 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 	const { breakedLineNodes } = blockquotedNodes.reduce( ( { breakedLineNodes, currentParent, lastWasAlsoAParagraph }, currentLineNode ) => {
 		
 		if( currentLineNode.adfType === 'heading'
+			|| currentLineNode.adfType === 'divider'
 			|| currentLineNode.adfType === 'codeBlock' ){
 			breakedLineNodes.push( currentLineNode )
 			return { breakedLineNodes }
@@ -137,12 +140,12 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 	}, { breakedLineNodes: [ ] } )
 	
 	
-	
 	///MARKDOWN logic
 	// Realign children nodes to orderedList and bulletList
 	const { accumulatedNodes } = breakedLineNodes.reduce( ( { accumulatedNodes, indexCurrentList }, currentLineNode ) => {
 		
 		if( currentLineNode.adfType !== 'heading'
+			&& currentLineNode.adfType !== 'divider'
 			&& currentLineNode.adfType !== 'orderedList'
 			&& currentLineNode.adfType !== 'bulletList'
 			&& indexCurrentList
@@ -152,7 +155,8 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
 		
 		accumulatedNodes.push( currentLineNode )
 		
-		if( currentLineNode.adfType === 'heading' )
+		if( currentLineNode.adfType === 'heading'
+			|| currentLineNode.adfType === 'divider' )
 			return { accumulatedNodes }
 		
 		if( currentLineNode.adfType === 'bulletList' || currentLineNode.adfType === 'orderedList' ){
@@ -223,6 +227,9 @@ function translateMarkdownLineToADF( markdownLineTextWithTabs ){
 	
 	const headerNode = matchHeader( markdownLine )
 	if( headerNode ) return headerNode
+	
+	const divider = matchDivider( markdownLine )
+	if( divider ) return divider
 	
 	
 	const listNode = matchList( markdownLine )
@@ -329,6 +336,17 @@ function matchParagraph( lineToMatch ){
 	return null
 }
 
+function matchDivider( lineToMatch ){
+	const divider = lineToMatch.match( /^(\s*-{3,}\s*|\s*\*{3,}\s*|\s*_{3,}\s*)$/ )
+	if( divider ){
+		return { 	adfType : 		"divider",
+					textToEmphasis: '',
+					textPosition: 	0 }
+	}
+
+	return null
+}
+
 function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameIndent ){
 	currentArrayOfNodesOfSameIndent.reduce( ( lastListNode, currentNode ) => {
 		
@@ -347,10 +365,13 @@ function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameI
 									 : nodeOrListItem
 								   : nodeOrListItem
 		
-		if( currentNode.node.adfType !== 'codeBlock'
+		if( currentNode.node.adfType === 'divider' )
+			return lastListNode
+		
+		else if( currentNode.node.adfType !== 'codeBlock'
 			&& currentNode.node.textToEmphasis )
 			attachItemNode( nodeToAttachTextTo, currentNode.node.textToEmphasis )
-
+		
 		else if( currentNode.node.adfType !== 'codeBlock'
 				 && currentNode.node.textToEmphasis === '' )
 			attachItemNode( nodeToAttachTextTo, ' ' )
@@ -372,6 +393,9 @@ function addTypeToNode( adfNodeToAttachTo, adfType, typeParams ){
 	switch( adfType ) {
 		case "heading":
 			return adfNodeToAttachTo.content.add( new Heading( typeParams ) )
+		
+		case "divider":
+			return adfNodeToAttachTo.content.add( new Rule() )
 		
 		case "bulletList":
 			return adfNodeToAttachTo.content.add( new BulletList() )
