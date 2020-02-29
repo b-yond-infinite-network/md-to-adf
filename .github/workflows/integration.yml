@@ -29,3 +29,18 @@ jobs:
       env:
         GITHUB_TOKEN:     ${{ secrets.GITHUB_TOKEN }}
         NPM_TOKEN:        ${{ secrets.NPM_TOKEN }}
+
+    - name: Build documentation
+      uses: andstor/jsdoc-action@v1
+      with:
+        source_dir:       ./source
+        output_dir:       ./dist/docs
+        config_file:      jsdoc.json
+        template_name:    docdash
+        front_page:       README.md
+
+    - name: Publish documentation
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token:     ${{ secrets.GITHUB_TOKEN }}
+        publish_dir:      ./dist/docs
