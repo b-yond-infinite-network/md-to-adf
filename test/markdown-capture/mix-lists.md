@@ -1,9 +1,0 @@
-* This is an unordered list of level 1
-  * This is an unordered list of level 2
-    1234. This is an ordered list of level 3
-          * This is an unordered list of level 4
-  * This is an unordered list of level 2
-	12345. This is an ordered list of level 3
-     123. Followed by an ordered list of level 3
-  * And a final unordered list of level 2
-* Closing with an unordered list of level 1
