@@ -1,6 +1,6 @@
 const { Before, After, Given, When, Then, And } = require( 'jest-cucumber-fusion' )
 
-const translate 	= require( '../../../index' )
+const translate 	= require( '../../source' )
 const filesystem  	= require( 'fs' )
 
 let translatedADF 	= ''
@@ -39,7 +39,7 @@ Given( /^the markdown in GITHUB is '(.*)'$/, gitthubMarkdown => {
 })
 
 Given( /^the markdown in GITHUB the same than in the markdown file named '(.*)'$/, exampleMDFile => {
-	jiraContent = filesystem.readFileSync( __dirname + '/../../markdown-capture/' + exampleMDFile + '.md', 'utf8')
+	jiraContent = filesystem.readFileSync( __dirname + '/../markdown-capture/' + exampleMDFile + '.md', 'utf8')
 })
 
 Given( 'the markdown in GITHUB is :', lineTable => {
@@ -100,7 +100,7 @@ Then( And( /^the ADF chunk at content path (\[(?: *\d+(?: |, |,)*)+\]) contains 
 
 
 Then( And( /the ADF document content has all the object defined in json file named '(.*)'$/, async exampleJSONFile => {
-	const parsedExpectedObject = require( __dirname + '/../../markdown-capture/' + exampleJSONFile + '.json' )
+	const parsedExpectedObject = require( __dirname + '/../markdown-capture/' + exampleJSONFile + '.json' )
 	// const parsedExpectedObject = JSON.parse( expectedTranslationObject )
 	
 	const flattenTranslatedADFChunk = JSON.parse( JSON.stringify( translatedADF.content.content ) )
