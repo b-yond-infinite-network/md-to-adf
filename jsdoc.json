@@ -20,5 +20,22 @@
   "templates": {
     "cleverLinks": false,
     "monospaceLinks": false
+  },
+  "docdash": {
+    "search": true,
+    "typedefs": true,
+    "meta": {
+      "title": "Markdown to ADF translator",
+      "description": "Markdown to Atlassian Document Format translation/traduction",
+      "keyword": "markdown, jira, atlassian, confluence, ADF"
+    },
+    "menu":{
+      "Github repo":{
+        "href":"https://github.com/b-yond-infinite-network/md-to-adf",
+        "target":"_blank",
+        "class":"menu-item",
+        "id":"repository"
+      }
+    }
   }
 }

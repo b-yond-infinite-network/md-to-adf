@@ -12,12 +12,20 @@
 const translateMarkdownLineToIR = require( __dirname + '/markdownParsing' )
 
 /**
+ * @typedef {Object}  IRTreeNode
+ * @property {IRElement} 	node 			- intermediate representation of the markdown element
+ * @property {IRElement[]} 	children 		- the list of children attach to that node
+ * @property {Number} 		indexOfList 	- the index in the list of expression
+ */
+
+
+/**
  * Implement markdown greediness and collapsing of subnode, generate the final node tree representing
  *  the IRElement topology
  *
- * @param rawTextMarkdown
+ * @param rawTextMarkdown	{String[]}		array of expression to parse and handle
  *
- * @returns {*}
+ * @returns {IRElement[]}	an array of IRElement
  */
 function buildTreeFromMarkdown( rawTextMarkdown ){
 	//code block are the most greedy expression in markdown
@@ -51,7 +59,7 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
  *
  * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into collapsing
  *
- * @returns [IRElements]
+ * @returns {IRElement[]}	an array of IRElement
  */
 function collapseCodeBloc( rawIROfMarkdown ){
 	///MARDKOWN logic - closing code blocks
@@ -113,7 +121,7 @@ function collapseCodeBloc( rawIROfMarkdown ){
  *
  * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into collapsing
  *
- * @returns [IRElements]
+ * @returns {IRElement[]}	an array of IRElement
  */
 function collapseBlockquote( rawIROfMarkdown ){
 	const { blockquotedNodes } = rawIROfMarkdown.reduce( ( { blockquotedNodes, currentLastThatWasBlockQuote }, currentLineNode ) => {
@@ -148,7 +156,7 @@ function collapseBlockquote( rawIROfMarkdown ){
  *
  * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into collapsing
  *
- * @returns [IRElements]
+ * @returns {IRElement[]}	an array of IRElement
  */
 function collapseParagraph( rawIROfMarkdown ){
 	const { breakedLineNodes } = rawIROfMarkdown.reduce( ( { breakedLineNodes, currentParent, lastWasAlsoAParagraph }, currentLineNode ) => {
@@ -204,7 +212,7 @@ function collapseParagraph( rawIROfMarkdown ){
  *
  * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into collapsing
  *
- * @returns [IRElements]
+ * @returns {IRElement[]}	an array of IRElement
  */
 function accumulateLevelFromList( rawIROfMarkdown ){
 	const { accumulatedNodes } = rawIROfMarkdown.reduce( ( { accumulatedNodes, indexCurrentList }, currentLineNode ) => {
@@ -241,7 +249,7 @@ function accumulateLevelFromList( rawIROfMarkdown ){
  *
  * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into collapsing
  *
- * @returns [ Number ]		an array of the textPosition for each level
+ * @returns {Number[]}		an array of the textPosition for each level
  */
 function createLevelList( rawIROfMarkdown ){
 	return rawIROfMarkdown.reduce( ( currentLevelList, currentNode ) => {
@@ -261,10 +269,10 @@ function createLevelList( rawIROfMarkdown ){
 /**
  * Map all element to their level in an array of level
  *
- * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into maping
+ * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into mapping
  * @param levelsPosition	{Array} 	the list of level's textPosition to use
  *
- * @returns {*}		an array of array or IRElement
+ * @returns {IRTreeNode[]}		an array of IRTreeNode
  */
 function mapIRToLevels( rawIROfMarkdown, levelsPosition ){
 	return levelsPosition.map( ( currentLevelPosition, currentIndex ) => {
@@ -283,7 +291,7 @@ function mapIRToLevels( rawIROfMarkdown, levelsPosition ){
  *
  * @param levelsMap			{Array} 	the level array of array of IRElement
  *
- * @returns {*}				tree of IRElements and their children
+ * @returns {IRTreeNode[]}				tree of IRElements and their children
  */
 function buildTreeFromLevelMap( levelsMap ){
 	const treeOfNode = levelsMap.reduce( ( currentTree, currentArrayOfListIndexes, currentIndexInTheArrayOfListIndexes ) => {

@@ -15,19 +15,20 @@
  *
  **********************************************************************************************************************/
 
+/**
+ * @typedef {Object}  IRElement
+ * @property {number} 		adfType 		- ADF type of the expression
+ * @property {number} 		textPosition 	- the actual start of the text (adfType dependent)
+ * @property {string} 		textToEmphasis 	- actual text of the element (adfType dependent)
+ * @property {string} 		typeParam 		- extra parameters adfType dependent
+ * @property {IRElement} 	nodeAttached 	- an attached code block to a list
+ */
 
 /**
  * Parse markdown into an Intermediate representation
  *
  * @param markdownLineTextWithTabs an array of markdown expression to process
- * @returns
- * {
- * 	adfType: 			{string}		ADF type of the expression,
- * 	textPosition: 		{number} 		the actual start of the text adfType dependent,
- * 	textToEmphasis: 	{string}		actual text of the element,
- * 	typeParam: 			{string} 		extra parameters adfType dependent,
- * 	nodeAttached: 		({textPosition, typeParam: *, adfType: string, textToEmphasis: string}|null) an attached code block to a list
- * 	}
+ * @returns {IRElement}		an intermediate representation of the markdown element
  */
 function parseMarkdownLinetoIR( markdownLineTextWithTabs ){
 	//to simplify tab management we replace them with spaces
@@ -65,15 +66,7 @@ function parseMarkdownLinetoIR( markdownLineTextWithTabs ){
  *
  * @param lineToMatch actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"heading"
- * 		textPosition 	0
- * 		textToEmphasis: parsed heading text
- * 		typeParam: 		null
- * 		nodeAttached: 	null
- * } |
- * 			null	if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchHeader( lineToMatch ){
 	const headerType = lineToMatch.match( /^(?<headerNumber>[#]{1,6}) (?<headerText>.*)$/i )
@@ -96,15 +89,7 @@ function matchHeader( lineToMatch ){
  *
  * @param lineToMatch actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"orderedList" or "bulletList"
- * 		textPosition 	actual text start - 2 (the space and level indicator)
- * 		textToEmphasis: parsed list or bullet text
- * 		typeParam: 		null
- * 		nodeAttached: 	if the parsed list or bullet text is a codeblock attach the codebloc element
- * } |
- * 			null	if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchList( lineToMatch ){
 	const list = lineToMatch.match( /^(?:[\s])*(?:[*\-+] |(?<orderedNumber>[0-9]+)[.)] )+(?<listText>.*)$/i )
@@ -135,15 +120,7 @@ function matchList( lineToMatch ){
  *
  * @param lineToMatch 	actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"codeBlock"
- * 		textPosition 	actual level of the block expression
- * 		textToEmphasis: ''
- * 		typeParam: 		language declared in the expression (if any)
- * 		nodeAttached: 	null
- * } |
- * 			null		if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchCodeBlock( lineToMatch ){
 	const codeBlock = lineToMatch.match( /^(?:[\s]*```)(?<Language>[^\s]*)$/i )
@@ -164,15 +141,7 @@ function matchCodeBlock( lineToMatch ){
  *
  * @param lineToMatch 	actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"blockQuote"
- * 		textPosition 	actual level of the block expression
- * 		textToEmphasis: actual text in the block
- * 		typeParam: 		null
- * 		nodeAttached: 	null
- * } |
- * null		if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchBlockQuote( lineToMatch ){
 	const blockquote = lineToMatch.match( /^(?:[\s])*> (?<quoteText>.*)$/i )
@@ -193,15 +162,7 @@ function matchBlockQuote( lineToMatch ){
  *
  * @param lineToMatch 	actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"paragraph"
- * 		textPosition 	actual level of the text parsed
- * 		textToEmphasis: actual text of the paragraph
- * 		typeParam: 		null
- * 		nodeAttached: 	null
- * } |
- * 			null		if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchParagraph( lineToMatch ){
 	const paragraph = lineToMatch.match( /^(?:[\s]*)(?<paragraphText>[^\n]+)$/ )
@@ -223,15 +184,7 @@ function matchParagraph( lineToMatch ){
  *
  * @param lineToMatch 	actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"divider"
- * 		textPosition 	0
- * 		textToEmphasis: ''
- * 		typeParam: 		null
- * 		nodeAttached: 	null
- * } |
- * 			null		if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchDivider( lineToMatch ){
 	const divider = lineToMatch.match( /^(\s*-{3,}\s*|\s*\*{3,}\s*|\s*_{3,}\s*)$/ )

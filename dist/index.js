@@ -264,12 +264,20 @@ exports.Strong = Strong;
 const translateMarkdownLineToIR = __webpack_require__( 572 )
 
 /**
+ * @typedef {Object}  IRTreeNode
+ * @property {IRElement} 	node 			- intermediate representation of the markdown element
+ * @property {IRElement[]} 	children 		- the list of children attach to that node
+ * @property {Number} 		indexOfList 	- the index in the list of expression
+ */
+
+
+/**
  * Implement markdown greediness and collapsing of subnode, generate the final node tree representing
  *  the IRElement topology
  *
- * @param rawTextMarkdown
+ * @param rawTextMarkdown	{String[]}		array of expression to parse and handle
  *
- * @returns {*}
+ * @returns {IRElement[]}	an array of IRElement
  */
 function buildTreeFromMarkdown( rawTextMarkdown ){
 	//code block are the most greedy expression in markdown
@@ -303,7 +311,7 @@ function buildTreeFromMarkdown( rawTextMarkdown ){
  *
  * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into collapsing
  *
- * @returns [IRElements]
+ * @returns {IRElement[]}	an array of IRElement
  */
 function collapseCodeBloc( rawIROfMarkdown ){
 	///MARDKOWN logic - closing code blocks
@@ -365,7 +373,7 @@ function collapseCodeBloc( rawIROfMarkdown ){
  *
  * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into collapsing
  *
- * @returns [IRElements]
+ * @returns {IRElement[]}	an array of IRElement
  */
 function collapseBlockquote( rawIROfMarkdown ){
 	const { blockquotedNodes } = rawIROfMarkdown.reduce( ( { blockquotedNodes, currentLastThatWasBlockQuote }, currentLineNode ) => {
@@ -400,7 +408,7 @@ function collapseBlockquote( rawIROfMarkdown ){
  *
  * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into collapsing
  *
- * @returns [IRElements]
+ * @returns {IRElement[]}	an array of IRElement
  */
 function collapseParagraph( rawIROfMarkdown ){
 	const { breakedLineNodes } = rawIROfMarkdown.reduce( ( { breakedLineNodes, currentParent, lastWasAlsoAParagraph }, currentLineNode ) => {
@@ -456,7 +464,7 @@ function collapseParagraph( rawIROfMarkdown ){
  *
  * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into collapsing
  *
- * @returns [IRElements]
+ * @returns {IRElement[]}	an array of IRElement
  */
 function accumulateLevelFromList( rawIROfMarkdown ){
 	const { accumulatedNodes } = rawIROfMarkdown.reduce( ( { accumulatedNodes, indexCurrentList }, currentLineNode ) => {
@@ -493,7 +501,7 @@ function accumulateLevelFromList( rawIROfMarkdown ){
  *
  * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into collapsing
  *
- * @returns [ Number ]		an array of the textPosition for each level
+ * @returns {Number[]}		an array of the textPosition for each level
  */
 function createLevelList( rawIROfMarkdown ){
 	return rawIROfMarkdown.reduce( ( currentLevelList, currentNode ) => {
@@ -513,10 +521,10 @@ function createLevelList( rawIROfMarkdown ){
 /**
  * Map all element to their level in an array of level
  *
- * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into maping
+ * @param rawIROfMarkdown	{Array} 	the array of IRElement to look into mapping
  * @param levelsPosition	{Array} 	the list of level's textPosition to use
  *
- * @returns {*}		an array of array or IRElement
+ * @returns {IRTreeNode[]}		an array of IRTreeNode
  */
 function mapIRToLevels( rawIROfMarkdown, levelsPosition ){
 	return levelsPosition.map( ( currentLevelPosition, currentIndex ) => {
@@ -535,7 +543,7 @@ function mapIRToLevels( rawIROfMarkdown, levelsPosition ){
  *
  * @param levelsMap			{Array} 	the level array of array of IRElement
  *
- * @returns {*}				tree of IRElements and their children
+ * @returns {IRTreeNode[]}				tree of IRElements and their children
  */
 function buildTreeFromLevelMap( levelsMap ){
 	const treeOfNode = levelsMap.reduce( ( currentTree, currentArrayOfListIndexes, currentIndexInTheArrayOfListIndexes ) => {
@@ -864,21 +872,17 @@ const { marks, Heading, Text, Emoji, BulletList, OrderedList, ListItem, CodeBloc
 
 const attachTextToNodeSliceEmphasis = __webpack_require__( 804 )
 
+// /**
+//  * @typedef { import("./markdownParsing").IRElement } IRElement
+//  * @typedef { import("./markdownHandling").IRTreeNode } IRTreeNode
+//  */
 
 /**
  * Browse the tree recursively to add each node to the ADF Document
  * 	It also treat special cases between top-level node and generic ones
  *
  * @param currentParentNode					{Document}		ADF document to add to
- * @param currentArrayOfNodesOfSameIndent	{
- * children: Array					array of element attached to that node,
- * node: {
- * 	adfType: 			{string}		ADF type of the expression,
- * 	textPosition: 		{number} 		the actual start of the text adfType dependent,
- * 	textToEmphasis: 	{string}		actual text of the element,
- * 	typeParam: 			{string} 		extra parameters adfType dependent,
- * 	nodeAttached: 		({textPosition, typeParam: *, adfType: string, textToEmphasis: string}|null) an attached code block to a list
- * 	} }
+ * @param currentArrayOfNodesOfSameIndent	{IRTreeNode}
  */
 function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameIndent ){
 	currentArrayOfNodesOfSameIndent.reduce( ( lastListNode, currentNode ) => {
@@ -1031,7 +1035,7 @@ function attachItemNode( nodeToAttachTo, rawText ) {
  *
  * @param rawText				{String}	the text content to try to match
  *
- * @returns 					{[String]}	the different slice matching an inline style
+ * @returns 					{String[]}	the different slice matching an inline style
  */
 function sliceInLineCode( rawText ){
 	return sliceOneMatchFromRegexp( rawText, 'inline', /(?<nonMatchBefore>[^`]*)(?:`(?<match>[^`]+)`)(?<nonMatchAfter>[^`]*)/g )
@@ -1042,7 +1046,7 @@ function sliceInLineCode( rawText ){
  *
  * @param rawText				{String}	the text content to try to match
  *
- * @returns 					{[String]}	the different slice matching an emoji style
+ * @returns 					{String[]}	the different slice matching an emoji style
  */
 function sliceEmoji( rawText ){
 	return sliceOneMatchFromRegexp( rawText, 'emoji',/(?<nonMatchBefore>[^`]*)(?::(?<match>[^`\s]+):)(?<nonMatchAfter>[^`]*)/g )
@@ -1053,7 +1057,7 @@ function sliceEmoji( rawText ){
  *
  * @param rawText				{String}	the text content to try to match
  *
- * @returns 					{[String]}	the different slice matching a link style
+ * @returns 					{String[]}	the different slice matching a link style
  */
 function sliceLink( rawText ){
 	return sliceOneMatchFromRegexp( rawText, 'link',/(?<nonMatchBefore>[^`]*)(?:\[(?<match>[^\[\]]+)\]\((?<matchOptional>[^\(\)"]+)(?: "(?<matchOptional2>[^"]*)")?\))(?<nonMatchAfter>[^`]*)/g )
@@ -1066,7 +1070,7 @@ function sliceLink( rawText ){
  * @param typeTag				{String}	the ADF Type to return if it matches
  * @param regexpToSliceWith		{RegExp}	the regexp with a match group and a non-match group to use
  *
- * @returns 					{[String]}	the different slice matching the specified regexp
+ * @returns 					{String[]}	the different slice matching the specified regexp
  */
 function sliceOneMatchFromRegexp( rawText, typeTag, regexpToSliceWith ){
 	let slicesResult = [ ]
@@ -1679,19 +1683,20 @@ exports.HardBreak = HardBreak;
  *
  **********************************************************************************************************************/
 
+/**
+ * @typedef {Object}  IRElement
+ * @property {number} 		adfType 		- ADF type of the expression
+ * @property {number} 		textPosition 	- the actual start of the text (adfType dependent)
+ * @property {string} 		textToEmphasis 	- actual text of the element (adfType dependent)
+ * @property {string} 		typeParam 		- extra parameters adfType dependent
+ * @property {IRElement} 	nodeAttached 	- an attached code block to a list
+ */
 
 /**
  * Parse markdown into an Intermediate representation
  *
  * @param markdownLineTextWithTabs an array of markdown expression to process
- * @returns
- * {
- * 	adfType: 			{string}		ADF type of the expression,
- * 	textPosition: 		{number} 		the actual start of the text adfType dependent,
- * 	textToEmphasis: 	{string}		actual text of the element,
- * 	typeParam: 			{string} 		extra parameters adfType dependent,
- * 	nodeAttached: 		({textPosition, typeParam: *, adfType: string, textToEmphasis: string}|null) an attached code block to a list
- * 	}
+ * @returns {IRElement}		an intermediate representation of the markdown element
  */
 function parseMarkdownLinetoIR( markdownLineTextWithTabs ){
 	//to simplify tab management we replace them with spaces
@@ -1729,15 +1734,7 @@ function parseMarkdownLinetoIR( markdownLineTextWithTabs ){
  *
  * @param lineToMatch actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"heading"
- * 		textPosition 	0
- * 		textToEmphasis: parsed heading text
- * 		typeParam: 		null
- * 		nodeAttached: 	null
- * } |
- * 			null	if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchHeader( lineToMatch ){
 	const headerType = lineToMatch.match( /^(?<headerNumber>[#]{1,6}) (?<headerText>.*)$/i )
@@ -1760,15 +1757,7 @@ function matchHeader( lineToMatch ){
  *
  * @param lineToMatch actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"orderedList" or "bulletList"
- * 		textPosition 	actual text start - 2 (the space and level indicator)
- * 		textToEmphasis: parsed list or bullet text
- * 		typeParam: 		null
- * 		nodeAttached: 	if the parsed list or bullet text is a codeblock attach the codebloc element
- * } |
- * 			null	if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchList( lineToMatch ){
 	const list = lineToMatch.match( /^(?:[\s])*(?:[*\-+] |(?<orderedNumber>[0-9]+)[.)] )+(?<listText>.*)$/i )
@@ -1799,15 +1788,7 @@ function matchList( lineToMatch ){
  *
  * @param lineToMatch 	actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"codeBlock"
- * 		textPosition 	actual level of the block expression
- * 		textToEmphasis: ''
- * 		typeParam: 		language declared in the expression (if any)
- * 		nodeAttached: 	null
- * } |
- * 			null		if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchCodeBlock( lineToMatch ){
 	const codeBlock = lineToMatch.match( /^(?:[\s]*```)(?<Language>[^\s]*)$/i )
@@ -1828,15 +1809,7 @@ function matchCodeBlock( lineToMatch ){
  *
  * @param lineToMatch 	actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"blockQuote"
- * 		textPosition 	actual level of the block expression
- * 		textToEmphasis: actual text in the block
- * 		typeParam: 		null
- * 		nodeAttached: 	null
- * } |
- * null		if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchBlockQuote( lineToMatch ){
 	const blockquote = lineToMatch.match( /^(?:[\s])*> (?<quoteText>.*)$/i )
@@ -1857,15 +1830,7 @@ function matchBlockQuote( lineToMatch ){
  *
  * @param lineToMatch 	actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"paragraph"
- * 		textPosition 	actual level of the text parsed
- * 		textToEmphasis: actual text of the paragraph
- * 		typeParam: 		null
- * 		nodeAttached: 	null
- * } |
- * 			null		if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchParagraph( lineToMatch ){
 	const paragraph = lineToMatch.match( /^(?:[\s]*)(?<paragraphText>[^\n]+)$/ )
@@ -1887,15 +1852,7 @@ function matchParagraph( lineToMatch ){
  *
  * @param lineToMatch 	actual expression to match
  *
- * @returns
- * {
- * 		adfType: 		"divider"
- * 		textPosition 	0
- * 		textToEmphasis: ''
- * 		typeParam: 		null
- * 		nodeAttached: 	null
- * } |
- * 			null		if the expression doesn't match
+ * @returns {IRElement} | null if the expression doesn't match
  */
 function matchDivider( lineToMatch ){
 	const divider = lineToMatch.match( /^(\s*-{3,}\s*|\s*\*{3,}\s*|\s*_{3,}\s*)$/ )
