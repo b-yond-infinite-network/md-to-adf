@@ -13,21 +13,17 @@ const { marks, Heading, Text, Emoji, BulletList, OrderedList, ListItem, CodeBloc
 
 const attachTextToNodeSliceEmphasis = require( __dirname + '/adfEmphasisParsing' )
 
+// /**
+//  * @typedef { import("./markdownParsing").IRElement } IRElement
+//  * @typedef { import("./markdownHandling").IRTreeNode } IRTreeNode
+//  */
 
 /**
  * Browse the tree recursively to add each node to the ADF Document
  * 	It also treat special cases between top-level node and generic ones
  *
  * @param currentParentNode					{Document}		ADF document to add to
- * @param currentArrayOfNodesOfSameIndent	{
- * children: Array					array of element attached to that node,
- * node: {
- * 	adfType: 			{string}		ADF type of the expression,
- * 	textPosition: 		{number} 		the actual start of the text adfType dependent,
- * 	textToEmphasis: 	{string}		actual text of the element,
- * 	typeParam: 			{string} 		extra parameters adfType dependent,
- * 	nodeAttached: 		({textPosition, typeParam: *, adfType: string, textToEmphasis: string}|null) an attached code block to a list
- * 	} }
+ * @param currentArrayOfNodesOfSameIndent	{IRTreeNode}
  */
 function fillADFNodesWithMarkdown( currentParentNode, currentArrayOfNodesOfSameIndent ){
 	currentArrayOfNodesOfSameIndent.reduce( ( lastListNode, currentNode ) => {
@@ -180,7 +176,7 @@ function attachItemNode( nodeToAttachTo, rawText ) {
  *
  * @param rawText				{String}	the text content to try to match
  *
- * @returns 					{[String]}	the different slice matching an inline style
+ * @returns 					{String[]}	the different slice matching an inline style
  */
 function sliceInLineCode( rawText ){
 	return sliceOneMatchFromRegexp( rawText, 'inline', /(?<nonMatchBefore>[^`]*)(?:`(?<match>[^`]+)`)(?<nonMatchAfter>[^`]*)/g )
@@ -191,7 +187,7 @@ function sliceInLineCode( rawText ){
  *
  * @param rawText				{String}	the text content to try to match
  *
- * @returns 					{[String]}	the different slice matching an emoji style
+ * @returns 					{String[]}	the different slice matching an emoji style
  */
 function sliceEmoji( rawText ){
 	return sliceOneMatchFromRegexp( rawText, 'emoji',/(?<nonMatchBefore>[^`]*)(?::(?<match>[^`\s]+):)(?<nonMatchAfter>[^`]*)/g )
@@ -202,7 +198,7 @@ function sliceEmoji( rawText ){
  *
  * @param rawText				{String}	the text content to try to match
  *
- * @returns 					{[String]}	the different slice matching a link style
+ * @returns 					{String[]}	the different slice matching a link style
  */
 function sliceLink( rawText ){
 	return sliceOneMatchFromRegexp( rawText, 'link',/(?<nonMatchBefore>[^`]*)(?:\[(?<match>[^\[\]]+)\]\((?<matchOptional>[^\(\)"]+)(?: "(?<matchOptional2>[^"]*)")?\))(?<nonMatchAfter>[^`]*)/g )
@@ -215,7 +211,7 @@ function sliceLink( rawText ){
  * @param typeTag				{String}	the ADF Type to return if it matches
  * @param regexpToSliceWith		{RegExp}	the regexp with a match group and a non-match group to use
  *
- * @returns 					{[String]}	the different slice matching the specified regexp
+ * @returns 					{String[]}	the different slice matching the specified regexp
  */
 function sliceOneMatchFromRegexp( rawText, typeTag, regexpToSliceWith ){
 	let slicesResult = [ ]
