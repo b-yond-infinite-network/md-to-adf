@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>adfEmphasisParsing.js - Markdown to ADF translator</title>
+    
+    <meta name="description" content="Markdown to Atlassian Document Format translation/traduction" />
+    
+        <meta name="keywords" content="markdown, jira, atlassian, confluence, ADF" />
+        <meta name="keyword" content="markdown, jira, atlassian, confluence, ADF" />
+    
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    <input type="text" id="nav-search" placeholder="Search" />
+    
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.com/b-yond-infinite-network/md-to-adf" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#accumulateLevelFromList">accumulateLevelFromList</a></li><li><a href="global.html#addTypeToNode">addTypeToNode</a></li><li><a href="global.html#attachItemNode">attachItemNode</a></li><li><a href="global.html#attachTextToNodeRaw">attachTextToNodeRaw</a></li><li><a href="global.html#attachTextToNodeSliceEmphasis">attachTextToNodeSliceEmphasis</a></li><li><a href="global.html#buildTreeFromLevelMap">buildTreeFromLevelMap</a></li><li><a href="global.html#buildTreeFromMarkdown">buildTreeFromMarkdown</a></li><li><a href="global.html#collapseBlockquote">collapseBlockquote</a></li><li><a href="global.html#collapseCodeBloc">collapseCodeBloc</a></li><li><a href="global.html#collapseParagraph">collapseParagraph</a></li><li><a href="global.html#convertDecorationLevelToMark">convertDecorationLevelToMark</a></li><li><a href="global.html#createLevelList">createLevelList</a></li><li><a href="global.html#fillADFNodesWithMarkdown">fillADFNodesWithMarkdown</a></li><li><a href="global.html#IRElement">IRElement</a></li><li><a href="global.html#IRTreeNode">IRTreeNode</a></li><li><a href="global.html#mapIRToLevels">mapIRToLevels</a></li><li><a href="global.html#matchBlockQuote">matchBlockQuote</a></li><li><a href="global.html#matchCodeBlock">matchCodeBlock</a></li><li><a href="global.html#matchDivider">matchDivider</a></li><li><a href="global.html#matchHeader">matchHeader</a></li><li><a href="global.html#matchList">matchList</a></li><li><a href="global.html#matchParagraph">matchParagraph</a></li><li><a href="global.html#parseMarkdownLinetoIR">parseMarkdownLinetoIR</a></li><li><a href="global.html#sliceEmoji">sliceEmoji</a></li><li><a href="global.html#sliceInLineCode">sliceInLineCode</a></li><li><a href="global.html#sliceLink">sliceLink</a></li><li><a href="global.html#sliceOneMatchFromRegexp">sliceOneMatchFromRegexp</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">adfEmphasisParsing.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/***********************************************************************************************************************
+ *
+ * Atlassian Document Format parsing of Emphasis
+ *
+ *  @author bruno.morel@b-yond.com
+ * ---------------------------------------------------------------------------------------------------------------------
+ *
+ * This transform a text with emphasis mark (*, _ or `) into an ADF expanded Paragraph
+ *
+ **********************************************************************************************************************/
+const { marks, Text }	= require( 'adf-builder' )
+
+
+/**
+ * Parse a string character per character to find emphasis patterns
+ *  This is a very "manual" way to do it, but it provides the most efficient result
+ * @param parentNode			{Node}		ADF Node to attach the suite of Text node to
+ * @param textToEmphasis		{String}	text to parse for emphasis parsing
+ */
+function attachTextToNodeSliceEmphasis( parentNode, textToEmphasis ){
+	const lineUnderscored = textToEmphasis.replace( /\*/g, '_' )
+	let currentDecorationLevel = 0
+	//see convertDecorationLevelToMark
+	// 0 => no decoration
+	// 1 => italic
+	// 2 => bold
+	// 3 => bold and italic
+	
+	let potentialUnderscorePair = false
+	let strikedThrough			= false
+	let expressionBuffer		= ''
+	for( const currentCharacterIndex in lineUnderscored ){
+		
+		if( lineUnderscored[ currentCharacterIndex ] !== '_' ){
+			expressionBuffer += lineUnderscored[ currentCharacterIndex ]
+			
+			if( potentialUnderscorePair ){
+				currentDecorationLevel = currentDecorationLevel === 0 || currentDecorationLevel === 2
+										 ? currentDecorationLevel + 1
+										 : currentDecorationLevel - 1
+				potentialUnderscorePair = false
+			}
+		}
+		
+		if( currentCharacterIndex > 0
+			&amp;&amp; lineUnderscored[ currentCharacterIndex ] === '~'
+			&amp;&amp; lineUnderscored[ currentCharacterIndex - 1 ] === '~' ){
+			const textNode = new Text( expressionBuffer.slice( 0, expressionBuffer.length - 2 ),
+									   convertDecorationLevelToMark( currentDecorationLevel, strikedThrough ) )
+			parentNode.content.add( textNode )
+			
+			expressionBuffer = ''
+			strikedThrough = !strikedThrough
+		}
+		
+		
+		if( lineUnderscored[ currentCharacterIndex ] === '_' ){
+			let decorationToUse = convertDecorationLevelToMark( currentDecorationLevel, strikedThrough )
+			
+			if( expressionBuffer !== '' ){
+				const textNode = new Text( expressionBuffer, decorationToUse )
+				parentNode.content.add( textNode )
+				// textWithInline( parentNode, expressionBuffer, decorationToUse )
+			}
+			else {
+				if( potentialUnderscorePair )
+					currentDecorationLevel = currentDecorationLevel === 0 || currentDecorationLevel === 1
+											 ? currentDecorationLevel + 2
+											 : currentDecorationLevel - 2
+			}
+			
+			potentialUnderscorePair = !potentialUnderscorePair
+			expressionBuffer = ''
+		}
+	}
+	
+	if( expressionBuffer !== '' ){
+		const textNode = new Text( expressionBuffer, convertDecorationLevelToMark( currentDecorationLevel, strikedThrough ) )
+		parentNode.content.add( textNode )
+	}
+}
+
+/**
+ * Convert a "decoration level" (bit swap) to an actual ADF Mark for the text
+ *
+ * @param decorationLevelToConvert	{Number}		decoration level follow the convention:
+ * 														0 => no decoration
+ * 														1 => italic
+ * 														2 => bold
+ * 														3 => bold and italic
+ * @param addStrikethrough			{Boolean}		is strikethrough active?
+ */
+function convertDecorationLevelToMark( decorationLevelToConvert, addStrikethrough ){
+	if( addStrikethrough )
+		return decorationLevelToConvert === 1
+			   ? marks().strike().em()
+			   : decorationLevelToConvert === 2
+				 ? marks().strike().strong()
+				 : decorationLevelToConvert === 3
+				   ? marks().strike().strong().em()
+				   : marks().strike()
+	
+	return decorationLevelToConvert === 1
+		   ? marks().em()
+		   : decorationLevelToConvert === 2
+			 ? marks().strong()
+			 : decorationLevelToConvert === 3
+			   ? marks().strong().em()
+			   : null
+}
+
+module.exports = attachTextToNodeSliceEmphasis
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Sat Feb 29 2020 01:58:43 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+<script src="scripts/search.js" defer></script>
+
+
+
+</body>
+</html>
