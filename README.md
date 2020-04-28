@@ -56,4 +56,4 @@ const translatedADF = fnTranslate( myJIRAFormattedTextContent )
 
 ## Additional Documentation 
 
-//  * [](./docs/)
+//  * [JSDoc](https://b-yond-infinite-network.github.io/md-to-adf/md-to-adf/0.0.0-semantically-released/)
