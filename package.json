@@ -25,7 +25,7 @@
   ],
   "dependencies": {
     "adf-builder": "^3.3.0",
-    "marked": "^0.8.2"
+    "marked": "^4.0.10"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.20.5",
