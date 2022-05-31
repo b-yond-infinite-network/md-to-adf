@@ -25,20 +25,20 @@
   ],
   "dependencies": {
     "adf-builder": "^3.3.0",
-    "marked": "^0.8.2"
+    "marked": "^4.0.16"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.20.5",
     "codecov": "^4.0.0-0",
-    "commitizen": "^4.0.4",
+    "commitizen": "^4.2.4",
     "conventional-changelog-jscs": "^0.1.0",
-    "cz-conventional-changelog": "^3.1.0",
+    "cz-conventional-changelog": "^3.3.0",
     "docdash": "~1.2.0",
-    "husky": "^3.0.9",
-    "jest-cucumber-fusion": "^0.6.4",
-    "jsdoc": "^3.6.4",
+    "husky": "^8.0.1",
+    "jest-cucumber-fusion": "^0.8.1",
+    "jsdoc": "^3.6.10",
     "minami": "~1.2.3",
-    "semantic-release": "^17.0.7"
+    "semantic-release": "^19.0.2"
   },
   "husky": {
     "hooks": {
