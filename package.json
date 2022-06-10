@@ -38,7 +38,7 @@
     "jest-cucumber-fusion": "^0.6.4",
     "jsdoc": "^3.6.4",
     "minami": "~1.2.3",
-    "semantic-release": "^17.0.7"
+    "semantic-release": "^19.0.3"
   },
   "husky": {
     "hooks": {
