@@ -2067,17 +2067,20 @@ function attachTextToNodeSliceEmphasis( parentNode, textToEmphasis ){
 		if( currentCharacterIndex > 0
 			&& lineUnderscored[ currentCharacterIndex ] === '~'
 			&& lineUnderscored[ currentCharacterIndex - 1 ] === '~' ){
-			const textNode = new Text( expressionBuffer.slice( 0, expressionBuffer.length - 2 ),
-									   convertDecorationLevelToMark( currentDecorationLevel, strikedThrough ) )
-			parentNode.content.add( textNode )
-			
-			expressionBuffer = ''
-			strikedThrough = !strikedThrough
-		}
-		
-		
-		if( lineUnderscored[ currentCharacterIndex ] === '_' ){
-			let decorationToUse = convertDecorationLevelToMark( currentDecorationLevel, strikedThrough )
+      const text = expressionBuffer.slice( 0, expressionBuffer.length - 2);
+      if (text.length > 0) {
+        const textNode = new Text( text,
+          convertDecorationLevelToMark( currentDecorationLevel, strikedThrough ) )
+        parentNode.content.add( textNode )
+      }
+
+      expressionBuffer = ''
+      strikedThrough = !strikedThrough
+    }
+
+
+    if( lineUnderscored[ currentCharacterIndex ] === '_' ){
+      let decorationToUse = convertDecorationLevelToMark( currentDecorationLevel, strikedThrough )
 			
 			if( expressionBuffer !== '' ){
 				const textNode = new Text( expressionBuffer, decorationToUse )
